@@ -1,5 +1,5 @@
 window.PhantomNav = {
-  initNavigation(renderTodayTabCallback) {
+  initNavigation(onTabChange) {
     document.querySelectorAll('nav.tabs button').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
@@ -7,6 +7,7 @@ window.PhantomNav = {
         btn.classList.add('active');
         const targetView = document.getElementById('view-' + btn.dataset.view);
         if (targetView) targetView.classList.add('active');
+        if (typeof onTabChange === 'function') onTabChange(btn.dataset.view);
       });
     });
 
@@ -17,9 +18,7 @@ window.PhantomNav = {
         btn.classList.add('active');
         const targetSub = document.getElementById('sub-' + btn.dataset.sub);
         if (targetSub) targetSub.classList.add('active');
-        if (btn.dataset.sub === 'today' && typeof renderTodayTabCallback === 'function') {
-          renderTodayTabCallback();
-        }
+        if (typeof onTabChange === 'function') onTabChange(btn.dataset.sub);
       });
     });
   }

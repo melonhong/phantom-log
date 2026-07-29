@@ -76,11 +76,22 @@ window.PhantomCalendar = {
     window.PhantomCalendar.renderDayEntries(dateStr);
   },
 
+  refreshUI(dateStr) {
+    const { saveData } = window.PhantomStorage;
+    saveData();
+    this.renderCalendar();
+    const targetDate = this.selectedDate || dateStr;
+    if (targetDate) this.renderDayEntries(targetDate);
+    if (this.renderTodayTab) this.renderTodayTab();
+    if (this.renderFeedRef) this.renderFeedRef();
+  },
+
   renderDayEntries(dateStr) {
     const wrap = document.getElementById('dpEntries');
     if (!wrap) return;
     wrap.innerHTML = '';
-    const { state, saveData } = window.PhantomStorage;
+
+    const { state } = window.PhantomStorage;
     const { escapeHtml, googleCalendarLink } = window.PhantomUtils;
 
     const posts = state.data.posts.filter(p => p.date === dateStr);
@@ -92,34 +103,41 @@ window.PhantomCalendar = {
       el.className = 'entry-mini';
       el.innerHTML = `
         <div class="row">
-          <div><span class="tag post">글${timeLabel ? (' · ' + timeLabel) : ''}</span>${escapeHtml(p.content).slice(0, 60)}${p.content.length > 60 ? '…' : ''}</div>
+          <div>${timeLabel ? `<span class="tag post">${timeLabel}</span>` : ''}${escapeHtml(p.content).slice(0, 60)}${p.content.length > 60 ? '…' : ''}</div>
           <button class="del">삭제</button>
         </div>`;
-      el.querySelector('.del').addEventListener('click', () => {
+
+      el.querySelector('.del').onclick = () => {
         state.data.posts = state.data.posts.filter(x => x.id !== p.id);
-        saveData();
-        window.PhantomCalendar.renderCalendar();
-        window.PhantomCalendar.renderDayEntries(dateStr);
-        if (window.PhantomCalendar.renderFeedRef) window.PhantomCalendar.renderFeedRef();
-      });
+        this.refreshUI(dateStr);
+      };
       wrap.appendChild(el);
     });
 
     todos.forEach(t => {
       const el = document.createElement('div');
-      el.className = 'entry-mini';
+      el.className = `entry-mini ${t.done ? 'done' : ''}`;
       el.innerHTML = `
         <div class="row">
-          <div><span class="tag todo">할일</span>${t.time ? ('[' + t.time + '] ') : ''}${escapeHtml(t.content)}
-          <a class="gcal-link" href="${googleCalendarLink(t)}" target="_blank" rel="noopener">캘린더 추가</a></div>
+          <div>
+            <input type="checkbox" class="todo-check" ${t.done ? 'checked' : ''}>
+            ${t.time ? `[${t.time}] ` : ''}
+            <span class="todo-content">${escapeHtml(t.content)}</span>
+            <a class="gcal-link" href="${googleCalendarLink(t)}" target="_blank" rel="noopener">캘린더 추가</a>
+          </div>
           <button class="del">삭제</button>
         </div>`;
-      el.querySelector('.del').addEventListener('click', () => {
+
+      el.querySelector('.todo-check').onchange = e => {
+        t.done = e.target.checked;
+        this.refreshUI(dateStr);
+      };
+
+      el.querySelector('.del').onclick = () => {
         state.data.todos = state.data.todos.filter(x => x.id !== t.id);
-        saveData();
-        window.PhantomCalendar.renderCalendar();
-        window.PhantomCalendar.renderDayEntries(dateStr);
-      });
+        this.refreshUI(dateStr);
+      };
+
       wrap.appendChild(el);
     });
   },
@@ -129,7 +147,7 @@ window.PhantomCalendar = {
     if (!wrap) return;
     wrap.innerHTML = '';
 
-    const { state, saveData } = window.PhantomStorage;
+    const { state } = window.PhantomStorage;
     const { getTodayStr, escapeHtml, googleCalendarLink } = window.PhantomUtils;
     const todayStr = getTodayStr();
 
@@ -144,7 +162,7 @@ window.PhantomCalendar = {
 
     todos.forEach(t => {
       const row = document.createElement('div');
-      row.className = 'today-todo-row' + (t.done ? ' done' : '');
+      row.className = `today-todo-row ${t.done ? 'done' : ''}`;
       row.innerHTML = `
         <input type="checkbox" ${t.done ? 'checked' : ''}>
         <div class="info">
@@ -154,19 +172,15 @@ window.PhantomCalendar = {
         </div>
         <button class="del">삭제</button>`;
 
-      row.querySelector('input').addEventListener('change', e => {
+      row.querySelector('input').onchange = e => {
         t.done = e.target.checked;
-        saveData();
-        row.classList.toggle('done', t.done);
-      });
+        this.refreshUI(todayStr);
+      };
 
-      row.querySelector('.del').addEventListener('click', () => {
+      row.querySelector('.del').onclick = () => {
         state.data.todos = state.data.todos.filter(x => x.id !== t.id);
-        saveData();
-        window.PhantomCalendar.renderTodayTab();
-        window.PhantomCalendar.renderCalendar();
-        if (window.PhantomCalendar.selectedDate === todayStr) window.PhantomCalendar.renderDayEntries(todayStr);
-      });
+        this.refreshUI(todayStr);
+      };
 
       wrap.appendChild(row);
     });
