@@ -119,7 +119,11 @@ window.PhantomCalendar = {
 
       el.querySelector('.del').onclick = (e) => {
         e.stopPropagation();
-        state.data.posts = state.data.posts.filter(x => x.id !== p.id);
+        if (window.PhantomFeed.deletePostAndReplies) {
+          window.PhantomFeed.deletePostAndReplies(p.id);
+        } else {
+          state.data.posts = state.data.posts.filter(x => x.id !== p.id);
+        }
         window.PhantomCalendar.refreshUI(dateStr);
       };
       wrap.appendChild(el);

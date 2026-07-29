@@ -90,6 +90,105 @@ window.PhantomFeed = {
     window.PhantomFeed.refreshCategoryUI('카테고리를 삭제했어요.');
   },
 
+  deletePostAndReplies(postId) {
+    const { state } = window.PhantomStorage;
+    const idsToDelete = new Set([postId]);
+    let added = true;
+    while (added) {
+      added = false;
+      state.data.posts.forEach(p => {
+        if (p.parentId && idsToDelete.has(p.parentId) && !idsToDelete.has(p.id)) {
+          idsToDelete.add(p.id);
+          added = true;
+        }
+      });
+    }
+    state.data.posts = state.data.posts.filter(p => !idsToDelete.has(p.id));
+  },
+
+  hasDescendant(post, targetId, allPosts) {
+    if (post.id === targetId) return true;
+    const children = allPosts.filter(r => r.parentId === post.id);
+    return children.some(child => window.PhantomFeed.hasDescendant(child, targetId, allPosts));
+  },
+
+  hasMatchingDescendant(post, allPosts, matchesFilter) {
+    const children = allPosts.filter(r => r.parentId === post.id);
+    for (const child of children) {
+      if (matchesFilter(child)) return true;
+      if (window.PhantomFeed.hasMatchingDescendant(child, allPosts, matchesFilter)) return true;
+    }
+    return false;
+  },
+
+  getThreadReplies(rootPost, allPosts) {
+    const list = [];
+    function traverse(post, depth) {
+      const children = allPosts
+        .filter(r => r.parentId === post.id)
+        .sort((a, b) => new Date(a.createdAt || 0) - new Date(b.createdAt || 0));
+      for (const child of children) {
+        list.push({ post: child, depth });
+        traverse(child, depth + 1);
+      }
+    }
+    traverse(rootPost, 1);
+    return list;
+  },
+
+  renderSingleCardHtml(p, q, isReply = false, depth = 0) {
+    const { highlight } = window.PhantomUtils;
+    const d = new Date(p.date + 'T00:00:00');
+    const cat = p.category || '일상';
+    const timeLabel = p.createdAt ? new Date(p.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+    const imgs = p.images || (p.image ? [p.image] : []);
+    let imgHtml = '';
+    if (imgs.length === 1) {
+      imgHtml = `<div class="post-img-wrap"><img src="${imgs[0]}" alt="첨부 이미지"></div>`;
+    } else if (imgs.length > 1) {
+      imgHtml = `<div class="post-img-grid">${imgs.map((src, i) => `<img src="${src}" alt="첨부 이미지 ${i + 1}">`).join('')}</div>`;
+    }
+
+    const visualDepthClass = isReply ? ` depth-${Math.min(depth, 2)}` : '';
+
+    return `
+      <div class="post-card${isReply ? ' reply-card' + visualDepthClass : ''}" id="post-${p.id}" data-id="${p.id}">
+        <div class="meta">
+          <span class="date">${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일${timeLabel ? (' · ' + timeLabel) : ''}</span>
+          <span class="cat-badge">${cat}</span>
+        </div>
+        ${p.content ? `<div class="text">${highlight(p.content, q)}</div>` : ''}
+        ${imgHtml}
+        <div class="actions">
+          <button type="button" class="reply-btn" data-id="${p.id}">답글</button>
+          <button type="button" class="del-btn" data-id="${p.id}">삭제</button>
+        </div>
+        <div class="reply-form" id="reply-form-${p.id}" style="display:none;">
+          <textarea class="reply-input" id="reply-input-${p.id}" placeholder="답글을 입력하세요..."></textarea>
+          <div class="reply-form-actions">
+            <button type="button" class="reply-cancel-btn" data-id="${p.id}">취소</button>
+            <button type="button" class="reply-submit-btn" data-id="${p.id}">게시</button>
+          </div>
+        </div>
+      </div>`;
+  },
+
+  renderRootPostWithThreadHtml(rootPost, allPosts, q) {
+    const rootHtml = window.PhantomFeed.renderSingleCardHtml(rootPost, q, false, 0);
+    const replies = window.PhantomFeed.getThreadReplies(rootPost, allPosts);
+    if (!replies.length) return rootHtml;
+
+    const repliesHtml = replies.map(item => window.PhantomFeed.renderSingleCardHtml(item.post, q, true, item.depth)).join('');
+
+    return `
+      <div class="thread-group">
+        ${rootHtml}
+        <div class="replies-container">
+          ${repliesHtml}
+        </div>
+      </div>`;
+  },
+
   renderFeed() {
     const searchInput = document.getElementById('searchInput');
     const searchDateInput = document.getElementById('searchDateInput');
@@ -105,16 +204,27 @@ window.PhantomFeed = {
       clearSearchDateBtn.style.display = searchDate ? 'inline-flex' : 'none';
     }
 
-    let posts = [...state.data.posts].sort((a, b) => {
+    const allPosts = state.data.posts;
+    let rootPosts = allPosts.filter(p => !p.parentId || !allPosts.some(x => x.id === p.parentId)).sort((a, b) => {
       if (b.date !== a.date) return b.date.localeCompare(a.date);
       return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
     });
 
-    if (searchDate) posts = posts.filter(p => p.date === searchDate);
-    if (q) posts = posts.filter(p => p.content.toLowerCase().includes(q));
-    if (window.PhantomFeed.activeCategory) posts = posts.filter(p => (p.category || defaultCatKey()) === window.PhantomFeed.activeCategory);
+    const matchesFilter = (p) => {
+      if (searchDate && p.date !== searchDate) return false;
+      if (q && !p.content.toLowerCase().includes(q)) return false;
+      if (window.PhantomFeed.activeCategory && (p.category || defaultCatKey()) !== window.PhantomFeed.activeCategory) return false;
+      return true;
+    };
 
-    window.PhantomFeed.filteredPosts = posts;
+    if (searchDate || q || window.PhantomFeed.activeCategory) {
+      rootPosts = rootPosts.filter(root => {
+        if (matchesFilter(root)) return true;
+        return window.PhantomFeed.hasMatchingDescendant(root, allPosts, matchesFilter);
+      });
+    }
+
+    window.PhantomFeed.filteredPosts = rootPosts;
     window.PhantomFeed.currentLoadedCount = 0;
     list.innerHTML = '';
 
@@ -131,35 +241,14 @@ window.PhantomFeed = {
     const searchInput = document.getElementById('searchInput');
     if (!list || !searchInput) return;
 
-    const { highlight } = window.PhantomUtils;
+    const { state } = window.PhantomStorage;
     const q = searchInput.value.trim();
 
     if (window.PhantomFeed.currentLoadedCount >= window.PhantomFeed.filteredPosts.length) return;
 
     const nextBatch = window.PhantomFeed.filteredPosts.slice(window.PhantomFeed.currentLoadedCount, window.PhantomFeed.currentLoadedCount + window.PhantomFeed.PAGE_SIZE);
 
-    const html = nextBatch.map(p => {
-      const d = new Date(p.date + 'T00:00:00');
-      const cat = p.category || '일상';
-      const timeLabel = p.createdAt ? new Date(p.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-      const imgs = p.images || (p.image ? [p.image] : []);
-      let imgHtml = '';
-      if (imgs.length === 1) {
-        imgHtml = `<div class="post-img-wrap"><img src="${imgs[0]}" alt="첨부 이미지"></div>`;
-      } else if (imgs.length > 1) {
-        imgHtml = `<div class="post-img-grid">${imgs.map((src, i) => `<img src="${src}" alt="첨부 이미지 ${i + 1}">`).join('')}</div>`;
-      }
-      return `
-        <div class="post-card" id="post-${p.id}" data-id="${p.id}">
-          <div class="meta">
-            <span class="date">${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일${timeLabel ? (' · ' + timeLabel) : ''}</span>
-            <span class="cat-badge">${cat}</span>
-          </div>
-          ${p.content ? `<div class="text">${highlight(p.content, q)}</div>` : ''}
-          ${imgHtml}
-          <div class="actions"><button data-id="${p.id}">삭제</button></div>
-        </div>`;
-    }).join('');
+    const html = nextBatch.map(p => window.PhantomFeed.renderRootPostWithThreadHtml(p, state.data.posts, q)).join('');
 
     list.insertAdjacentHTML('beforeend', html);
     window.PhantomFeed.currentLoadedCount += nextBatch.length;
@@ -190,11 +279,11 @@ window.PhantomFeed = {
       needRender = true;
     }
 
-    if (needRender || !window.PhantomFeed.filteredPosts.some(p => p.id === postId)) {
+    if (needRender || !window.PhantomFeed.filteredPosts.some(root => window.PhantomFeed.hasDescendant(root, postId, state.data.posts))) {
       window.PhantomFeed.renderFeed();
     }
 
-    const targetIdx = window.PhantomFeed.filteredPosts.findIndex(p => p.id === postId);
+    const targetIdx = window.PhantomFeed.filteredPosts.findIndex(root => window.PhantomFeed.hasDescendant(root, postId, state.data.posts));
     if (targetIdx !== -1) {
       while (targetIdx >= window.PhantomFeed.currentLoadedCount && window.PhantomFeed.currentLoadedCount < window.PhantomFeed.filteredPosts.length) {
         window.PhantomFeed.loadMorePosts();
@@ -308,6 +397,7 @@ window.PhantomFeed = {
 
       state.data.posts.unshift({
         id: uid(),
+        parentId: null,
         content,
         date,
         category,
@@ -325,20 +415,77 @@ window.PhantomFeed = {
       toast('게시했어요.');
     });
 
-    // 이벤트 위임: 피드 포스트 (이미지 클릭 및 삭제 버튼)
+    // 이벤트 위임: 피드 포스트 (이미지 클릭, 답글 버튼, 답글 게시/취소, 삭제 버튼)
     document.getElementById('feedList')?.addEventListener('click', (e) => {
       const img = e.target.closest('.post-img-wrap img, .post-img-grid img');
       if (img && img.src) {
         window.PhantomUtils.openImageModal(img.src);
         return;
       }
-      const delBtn = e.target.closest('.actions button[data-id]');
-      if (!delBtn) return;
-      const id = delBtn.dataset.id;
-      state.data.posts = state.data.posts.filter(x => x.id !== id);
-      saveData();
-      window.PhantomFeed.renderFeed();
-      window.PhantomCalendar.renderCalendar();
+
+      const replyBtn = e.target.closest('.reply-btn[data-id]');
+      if (replyBtn) {
+        const id = replyBtn.dataset.id;
+        const formEl = document.getElementById(`reply-form-${id}`);
+        if (formEl) {
+          const isHidden = formEl.style.display === 'none' || !formEl.style.display;
+          formEl.style.display = isHidden ? 'block' : 'none';
+          if (isHidden) {
+            const input = document.getElementById(`reply-input-${id}`);
+            if (input) input.focus();
+          }
+        }
+        return;
+      }
+
+      const cancelBtn = e.target.closest('.reply-cancel-btn[data-id]');
+      if (cancelBtn) {
+        const id = cancelBtn.dataset.id;
+        const formEl = document.getElementById(`reply-form-${id}`);
+        const inputEl = document.getElementById(`reply-input-${id}`);
+        if (formEl) formEl.style.display = 'none';
+        if (inputEl) inputEl.value = '';
+        return;
+      }
+
+      const submitBtn = e.target.closest('.reply-submit-btn[data-id]');
+      if (submitBtn) {
+        const parentId = submitBtn.dataset.id;
+        const inputEl = document.getElementById(`reply-input-${parentId}`);
+        if (!inputEl) return;
+        const content = inputEl.value.trim();
+        if (!content) {
+          toast('답글 내용을 입력해주세요.');
+          return;
+        }
+
+        const parentPost = state.data.posts.find(x => x.id === parentId);
+        state.data.posts.push({
+          id: uid(),
+          parentId,
+          content,
+          date: parentPost ? parentPost.date : getTodayStr(),
+          category: parentPost ? parentPost.category : defaultCatKey(),
+          images: [],
+          createdAt: new Date().toISOString()
+        });
+        saveData();
+        window.PhantomFeed.renderFeed();
+        window.PhantomCalendar.renderCalendar();
+        toast('답글을 게시했어요.');
+        return;
+      }
+
+      const delBtn = e.target.closest('.del-btn[data-id], .actions button[data-id]');
+      if (delBtn) {
+        const id = delBtn.dataset.id;
+        window.PhantomFeed.deletePostAndReplies(id);
+        saveData();
+        window.PhantomFeed.renderFeed();
+        window.PhantomCalendar.renderCalendar();
+        toast('삭제했어요.');
+        return;
+      }
     });
 
     // 이벤트 위임: 카테고리 칩 선택

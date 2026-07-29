@@ -223,16 +223,162 @@
 
 .post-card .actions {
   margin-top: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .post-card .actions button {
   color: var(--ink-faint);
   font-size: 13px;
   font-weight: 700;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  transition: color 0.2s;
 }
 
 .post-card .actions button:hover {
   color: var(--ink);
+}
+
+.post-card .actions .reply-btn:hover {
+  color: var(--primary, #5865f2);
+}
+
+.post-card .actions .del-btn:hover {
+  color: #ef4444;
+}
+
+/* 답글 작성 폼 */
+.reply-form {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--surface-onyx);
+  border-radius: var(--rounded-md);
+  border: 1px solid var(--border);
+}
+
+.reply-form .reply-input {
+  width: 100%;
+  min-height: 60px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.reply-form .reply-input::placeholder {
+  color: var(--ink-faint);
+}
+
+.reply-form-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.reply-cancel-btn {
+  background: transparent;
+  color: var(--ink-dim);
+  border: none;
+  padding: 6px 12px;
+  border-radius: var(--rounded-pill);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.reply-cancel-btn:hover {
+  background: var(--color-hover-bg);
+  color: var(--ink);
+}
+
+.reply-submit-btn {
+  background: var(--green);
+  color: var(--ink-dark);
+  border: none;
+  padding: 6px 14px;
+  border-radius: var(--rounded-pill);
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.reply-submit-btn:hover {
+  background: var(--green-hover);
+  transform: scale(1.03);
+}
+
+/* 스레드 그룹 및 형제 렌더링 방식 */
+.thread-group {
+  margin-bottom: 16px;
+}
+
+.thread-group>.post-card {
+  margin-bottom: 0;
+}
+
+.replies-container {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  position: relative;
+}
+
+.reply-card {
+  position: relative;
+  background: var(--surface-onyx);
+  box-shadow: none;
+  margin-bottom: 0;
+  padding: 14px 16px;
+  border-radius: var(--rounded-lg);
+}
+
+/* 1단계 답글 들여쓰기 */
+.reply-card.depth-1 {
+  margin-left: 16px;
+}
+
+/* 2단계 및 3단계 이상(depth-2) 답글 들여쓰기 (동일 너비 고정) */
+.reply-card.depth-2 {
+  margin-left: 32px;
+}
+
+/* 1단계 답글: 둥근 'ㄴ'자 스레드 연결선 */
+.reply-card.depth-1::before {
+  content: '';
+  position: absolute;
+  top: -8px;
+  left: -12px;
+  width: 10px;
+  height: 22px;
+  border-left: 2px solid var(--border);
+  border-bottom: 2px solid var(--border);
+  border-bottom-left-radius: 8px;
+  pointer-events: none;
+}
+
+/* 2단계 및 3단계 이상(depth-2) 답글: 위의 댓글과 이어지는 수직 직선 연결선 (박스 상단) */
+.reply-card.depth-2::before {
+  content: '';
+  position: absolute;
+  top: -9px;
+  left: 24px;
+  width: 0;
+  height: 9px;
+  border-left: 2px solid var(--border);
+  border-bottom: none;
+  border-bottom-left-radius: 0;
+  pointer-events: none;
 }
 
 mark {

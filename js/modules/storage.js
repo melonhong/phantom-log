@@ -36,7 +36,7 @@ window.PhantomStorage = {
       if (res && res.value) {
         const parsed = JSON.parse(res.value);
         window.PhantomStorage.state.data = {
-          posts: parsed.posts || [],
+          posts: (parsed.posts || []).map(p => ({ parentId: null, ...p })),
           todos: parsed.todos || [],
           monthly: parsed.monthly || {},
           categories: (parsed.categories && parsed.categories.length) ? parsed.categories : JSON.parse(JSON.stringify(CATS_DEFAULT))
