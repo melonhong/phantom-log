@@ -6,36 +6,49 @@ window.PhantomBackup = {
     const exportBtn = document.getElementById('exportBtn');
     if (exportBtn) {
       exportBtn.addEventListener('click', async () => {
-        const jsonStr = JSON.stringify(state.data, null, 2);
-        const defaultFileName = `기록장-백업-${getTodayStr()}.json`;
+        try {
+          const jsonStr = JSON.stringify(state.data, null, 2);
+          const zip = new JSZip();
+          zip.file('backup.json', jsonStr);
 
-        if ('showSaveFilePicker' in window) {
-          try {
-            const handle = await window.showSaveFilePicker({
-              suggestedName: defaultFileName,
-              types: [{
-                description: 'JSON File',
-                accept: { 'application/json': ['.json'] }
-              }]
-            });
-            const writable = await handle.createWritable();
-            await writable.write(jsonStr);
-            await writable.close();
-            toast('JSON 파일로 저장했어요.');
-          } catch (err) {
-            if (err.name !== 'AbortError') {
-              toast('파일 저장 중 오류가 발생했습니다.');
+          const zipBlob = await zip.generateAsync({
+            type: 'blob',
+            compression: 'DEFLATE',
+            compressionOptions: { level: 6 }
+          });
+
+          const defaultFileName = `기록장-백업-${getTodayStr()}.zip`;
+
+          if ('showSaveFilePicker' in window) {
+            try {
+              const handle = await window.showSaveFilePicker({
+                suggestedName: defaultFileName,
+                types: [{
+                  description: 'ZIP Archive',
+                  accept: { 'application/zip': ['.zip'] }
+                }]
+              });
+              const writable = await handle.createWritable();
+              await writable.write(zipBlob);
+              await writable.close();
+              toast('ZIP 백업 파일로 저장했어요.');
+            } catch (err) {
+              if (err.name !== 'AbortError') {
+                toast('파일 저장 중 오류가 발생했습니다.');
+              }
             }
+          } else {
+            const url = URL.createObjectURL(zipBlob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = defaultFileName;
+            a.click();
+            URL.revokeObjectURL(url);
+            toast('ZIP 백업 파일로 저장했어요.');
           }
-        } else {
-          const blob = new Blob([jsonStr], { type: 'application/json' });
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement('a');
-          a.href = url;
-          a.download = defaultFileName;
-          a.click();
-          URL.revokeObjectURL(url);
-          toast('JSON 파일로 저장했어요.');
+        } catch (e) {
+          console.error(e);
+          toast('백업 생성 중 오류가 발생했습니다.');
         }
       });
     }
@@ -44,28 +57,37 @@ window.PhantomBackup = {
     const importFile = document.getElementById('importFile');
     if (importBtn && importFile) {
       importBtn.addEventListener('click', () => importFile.click());
-      importFile.addEventListener('change', (e) => {
+      importFile.addEventListener('change', async (e) => {
         const file = e.target.files[0];
         if (!file) return;
 
-        const reader = new FileReader();
-        reader.onload = async () => {
-          try {
-            const parsed = JSON.parse(reader.result);
-            state.data = {
-              posts: parsed.posts || [],
-              todos: parsed.todos || [],
-              monthly: parsed.monthly || {},
-              categories: (parsed.categories && parsed.categories.length) ? parsed.categories : JSON.parse(JSON.stringify(CATS_DEFAULT))
-            };
-            await saveData();
-            if (typeof renderAllCallback === 'function') renderAllCallback();
-            toast('데이터를 불러왔어요.');
-          } catch (err) {
-            toast('파일을 읽을 수 없어요. JSON 형식을 확인해주세요.');
+        try {
+          let jsonText = '';
+          if (file.name.endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed') {
+            const zip = await JSZip.loadAsync(file);
+            const jsonFile = zip.file('backup.json') || Object.values(zip.files).find(f => !f.dir && f.name.endsWith('.json'));
+            if (!jsonFile) {
+              throw new Error('ZIP 내에서 백업 JSON 파일을 찾을 수 없습니다.');
+            }
+            jsonText = await jsonFile.async('text');
+          } else {
+            jsonText = await file.text();
           }
-        };
-        reader.readAsText(file);
+
+          const parsed = JSON.parse(jsonText);
+          state.data = {
+            posts: parsed.posts || [],
+            todos: parsed.todos || [],
+            monthly: parsed.monthly || {},
+            categories: (parsed.categories && parsed.categories.length) ? parsed.categories : JSON.parse(JSON.stringify(CATS_DEFAULT))
+          };
+          await saveData();
+          if (typeof renderAllCallback === 'function') renderAllCallback();
+          toast('데이터를 성공적으로 불러왔어요.');
+        } catch (err) {
+          console.error(err);
+          toast('파일을 읽을 수 없어요. 유효한 백업 파일인지 확인해주세요.');
+        }
         e.target.value = '';
       });
     }

@@ -99,11 +99,13 @@ window.PhantomCalendar = {
 
     posts.forEach(p => {
       const timeLabel = p.createdAt ? new Date(p.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+      const photoBadge = p.image ? '<span class="tag post" style="background:var(--primary); color:#fff; margin-right:4px;">📷 사진</span>' : '';
+      const contentText = p.content ? escapeHtml(p.content).slice(0, 50) + (p.content.length > 50 ? '…' : '') : '';
       const el = document.createElement('div');
       el.className = 'entry-mini';
       el.innerHTML = `
         <div class="row">
-          <div>${timeLabel ? `<span class="tag post">${timeLabel}</span>` : ''}${escapeHtml(p.content).slice(0, 60)}${p.content.length > 60 ? '…' : ''}</div>
+          <div>${timeLabel ? `<span class="tag post">${timeLabel}</span>` : ''}${photoBadge}${contentText}</div>
           <button class="del">삭제</button>
         </div>`;
 

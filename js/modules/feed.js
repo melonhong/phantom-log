@@ -2,6 +2,7 @@ window.PhantomFeed = {
   activeCategory: null,
   filteredPosts: [],
   currentLoadedCount: 0,
+  currentBase64Image: null,
   PAGE_SIZE: 50,
 
   populateComposeCategory() {
@@ -161,6 +162,7 @@ window.PhantomFeed = {
       const d = new Date(p.date + 'T00:00:00');
       const cat = p.category || '일상';
       const timeLabel = p.createdAt ? new Date(p.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
+      const imgHtml = p.image ? `<div class="post-img-wrap"><img src="${p.image}" alt="첨부 이미지"></div>` : '';
       const el = document.createElement('div');
       el.className = 'post-card';
       el.innerHTML = `
@@ -168,7 +170,8 @@ window.PhantomFeed = {
           <span class="date">${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일${timeLabel ? (' · ' + timeLabel) : ''}</span>
           <span class="cat-badge">${cat}</span>
         </div>
-        <div class="text">${highlight(p.content, q)}</div>
+        ${p.content ? `<div class="text">${highlight(p.content, q)}</div>` : ''}
+        ${imgHtml}
         <div class="actions"><button data-id="${p.id}">삭제</button></div>`;
 
       el.querySelector('.actions button').addEventListener('click', () => {
@@ -191,6 +194,10 @@ window.PhantomFeed = {
     const composeDate = document.getElementById('composeDate');
     const composeCategory = document.getElementById('composeCategory');
     const charCount = document.getElementById('charCount');
+    const composeImageInput = document.getElementById('composeImageInput');
+    const imagePreviewWrap = document.getElementById('imagePreviewWrap');
+    const imagePreview = document.getElementById('imagePreview');
+    const removeImageBtn = document.getElementById('removeImageBtn');
 
     if (composeDate) composeDate.value = getTodayStr();
 
@@ -200,20 +207,55 @@ window.PhantomFeed = {
       });
     }
 
+    const clearImagePreview = () => {
+      window.PhantomFeed.currentBase64Image = null;
+      if (composeImageInput) composeImageInput.value = '';
+      if (imagePreview) imagePreview.src = '';
+      if (imagePreviewWrap) imagePreviewWrap.style.display = 'none';
+    };
+
+    if (composeImageInput) {
+      composeImageInput.addEventListener('change', async (e) => {
+        const file = e.target.files && e.target.files[0];
+        if (!file) return;
+        const base64 = await window.PhantomUtils.compressImage(file);
+        if (base64) {
+          window.PhantomFeed.currentBase64Image = base64;
+          if (imagePreview) imagePreview.src = base64;
+          if (imagePreviewWrap) imagePreviewWrap.style.display = 'inline-block';
+        } else {
+          toast('이미지를 처리하지 못했어요.');
+        }
+      });
+    }
+
+    if (removeImageBtn) {
+      removeImageBtn.addEventListener('click', clearImagePreview);
+    }
+
     const postBtn = document.getElementById('postBtn');
     if (postBtn) {
       postBtn.addEventListener('click', () => {
         const content = composeText.value.trim();
-        if (!content) return;
+        const image = window.PhantomFeed.currentBase64Image;
+        if (!content && !image) return;
 
         const date = composeDate.value || getTodayStr();
         const category = composeCategory.value || defaultCatKey();
 
-        state.data.posts.unshift({ id: uid(), content, date, category, createdAt: new Date().toISOString() });
+        state.data.posts.unshift({
+          id: uid(),
+          content,
+          date,
+          category,
+          image,
+          createdAt: new Date().toISOString()
+        });
         saveData();
 
         composeText.value = '';
         charCount.textContent = '0';
+        clearImagePreview();
         window.PhantomFeed.renderFeed();
         window.PhantomCalendar.renderCalendar();
         toast('게시했어요.');

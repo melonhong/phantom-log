@@ -30,5 +30,39 @@ window.PhantomUtils = {
       dates: `${start}/${end}`
     });
     return `https://www.google.com/calendar/render?${params.toString()}`;
+  },
+  compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+      if (!file || !file.type.startsWith('image/')) {
+        resolve(null);
+        return;
+      }
+      const reader = new FileReader();
+      reader.onerror = () => resolve(null);
+      reader.onload = e => {
+        const img = new Image();
+        img.onerror = () => resolve(null);
+        img.onload = () => {
+          let { width, height } = img;
+          if (width > maxWidth || height > maxHeight) {
+            if (width / height > maxWidth / maxHeight) {
+              height = Math.round((height * maxWidth) / width);
+              width = maxWidth;
+            } else {
+              width = Math.round((width * maxHeight) / height);
+              height = maxHeight;
+            }
+          }
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/webp', quality));
+        };
+        img.src = e.target.result;
+      };
+      reader.readAsDataURL(file);
+    });
   }
 };

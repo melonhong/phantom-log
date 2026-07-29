@@ -201,3 +201,75 @@ mark {
   font-size: 14px; 
   font-weight: 500; 
 }
+
+/* 사진 첨부 버튼 및 미리보기 */
+.img-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-onyx);
+  color: var(--ink-dim);
+  border-radius: var(--rounded-sm);
+  padding: 8px 10px;
+  cursor: pointer;
+  transition: background 0.2s, color 0.2s;
+}
+
+.img-upload-btn:hover {
+  background: var(--color-hover-bg);
+  color: var(--ink);
+}
+
+.image-preview-wrap {
+  position: relative;
+  margin-top: 12px;
+  max-width: 120px;
+  border-radius: var(--rounded-md);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.image-preview-wrap img {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  display: block;
+}
+
+.remove-img-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fff;
+  border: none;
+  border-radius: 50%;
+  width: 22px;
+  height: 22px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.remove-img-btn:hover {
+  background: rgba(220, 38, 38, 0.9);
+}
+
+/* 피드 카드 내부 이미지 */
+.post-img-wrap {
+  margin-top: 12px;
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+  max-height: 500px;
+  background: var(--surface-onyx);
+}
+
+.post-img-wrap img {
+  width: 100%;
+  max-height: 500px;
+  object-fit: contain;
+  display: block;
+}
