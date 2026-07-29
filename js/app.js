@@ -26,6 +26,7 @@ document.addEventListener('DOMContentLoaded', async () => {
   window.PhantomGoals.initGoals();
   window.PhantomBackup.initBackup(renderAll);
   window.PhantomNotification.initNotification();
+  window.PhantomUtils.initImageModal();
 
   const todayLabel = document.getElementById('todayLabel');
   if (todayLabel) {

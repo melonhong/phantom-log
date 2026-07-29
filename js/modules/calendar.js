@@ -102,7 +102,8 @@ window.PhantomCalendar = {
 
     posts.forEach(p => {
       const timeLabel = p.createdAt ? new Date(p.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-      const photoBadge = p.image ? '<span class="tag post" style="background:var(--primary); color:#fff; margin-right:4px;">📷 사진</span>' : '';
+      const photoCount = (p.images && p.images.length) || (p.image ? 1 : 0);
+      const photoBadge = photoCount ? `<span class="tag post" style="background:var(--primary); color:#fff; margin-right:4px;">📷 사진${photoCount > 1 ? ` (${photoCount})` : ''}</span>` : '';
       const contentText = p.content ? escapeHtml(p.content).slice(0, 50) + (p.content.length > 50 ? '…' : '') : '';
       const el = document.createElement('div');
       el.className = 'entry-mini';

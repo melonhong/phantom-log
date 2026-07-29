@@ -82,8 +82,7 @@
         <div class="compose">
           <textarea id="composeText" placeholder="무슨 생각을 하고 있나요?"></textarea>
           <div class="image-preview-wrap" id="imagePreviewWrap" style="display:none;">
-            <img id="imagePreview" src="" alt="첨부 이미지 미리보기">
-            <button type="button" class="remove-img-btn" id="removeImageBtn" title="사진 삭제">✕</button>
+            <div class="image-preview-list" id="imagePreviewList"></div>
           </div>
           <div class="foot">
             <div class="foot-row">
@@ -96,7 +95,7 @@
                   <polyline points="21 15 16 10 5 21"/>
                 </svg>
               </label>
-              <input type="file" id="composeImageInput" accept="image/*" style="display:none;">
+              <input type="file" id="composeImageInput" accept="image/*" multiple style="display:none;">
             </div>
             <div class="foot-row">
               <span class="char" id="charCount">0</span>
@@ -186,6 +185,14 @@
       <div class="btn-row">
         <button class="btn-cancel" id="catClose">닫기</button>
       </div>
+    </div>
+  </div>
+
+  <!-- Image Lightbox modal -->
+  <div class="overlay image-modal-overlay" id="imgModalOverlay">
+    <div class="image-modal-content">
+      <button type="button" class="image-modal-close" id="imgModalClose" title="닫기">✕</button>
+      <img id="imgModalImg" src="" alt="확대 이미지">
     </div>
   </div>
 

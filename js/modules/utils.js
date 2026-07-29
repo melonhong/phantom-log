@@ -61,5 +61,32 @@ window.PhantomUtils = {
       };
       reader.readAsDataURL(file);
     });
+  },
+  openImageModal(src) {
+    const overlay = document.getElementById('imgModalOverlay');
+    const img = document.getElementById('imgModalImg');
+    if (!overlay || !img) return;
+    img.src = src;
+    overlay.classList.add('show');
+  },
+  closeImageModal() {
+    const overlay = document.getElementById('imgModalOverlay');
+    const img = document.getElementById('imgModalImg');
+    if (!overlay) return;
+    overlay.classList.remove('show');
+    if (img) img.src = '';
+  },
+  initImageModal() {
+    const overlay = document.getElementById('imgModalOverlay');
+    const closeBtn = document.getElementById('imgModalClose');
+    if (closeBtn) closeBtn.addEventListener('click', () => window.PhantomUtils.closeImageModal());
+    if (overlay) {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) window.PhantomUtils.closeImageModal();
+      });
+    }
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') window.PhantomUtils.closeImageModal();
+    });
   }
 };

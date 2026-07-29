@@ -221,17 +221,29 @@ mark {
 }
 
 .image-preview-wrap {
-  position: relative;
   margin-top: 12px;
-  max-width: 120px;
+}
+
+.image-preview-list {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.image-preview-item {
+  position: relative;
+  flex-shrink: 0;
+  width: 90px;
+  height: 90px;
   border-radius: var(--rounded-md);
   overflow: hidden;
   border: 1px solid var(--border);
 }
 
-.image-preview-wrap img {
+.image-preview-item img {
   width: 100%;
-  height: 120px;
+  height: 100%;
   object-fit: cover;
   display: block;
 }
@@ -258,7 +270,7 @@ mark {
   background: rgba(220, 38, 38, 0.9);
 }
 
-/* 피드 카드 내부 이미지 */
+/* 피드 카드 내부 이미지 (단일 및 그리드) */
 .post-img-wrap {
   margin-top: 12px;
   border-radius: var(--rounded-lg);
@@ -272,4 +284,31 @@ mark {
   max-height: 500px;
   object-fit: contain;
   display: block;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.post-img-wrap img:hover,
+.post-img-grid img:hover {
+  opacity: 0.9;
+}
+
+.post-img-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 6px;
+  margin-top: 12px;
+  border-radius: var(--rounded-lg);
+  overflow: hidden;
+}
+
+.post-img-grid img {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  border-radius: var(--rounded-sm);
+  background: var(--surface-onyx);
+  display: block;
+  cursor: pointer;
+  transition: opacity 0.2s;
 }

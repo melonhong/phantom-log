@@ -2,7 +2,7 @@ window.PhantomFeed = {
   activeCategory: null,
   filteredPosts: [],
   currentLoadedCount: 0,
-  currentBase64Image: null,
+  currentBase64Images: [],
   PAGE_SIZE: 50,
 
   refreshCategoryUI(msg) {
@@ -134,7 +134,13 @@ window.PhantomFeed = {
       const d = new Date(p.date + 'T00:00:00');
       const cat = p.category || '일상';
       const timeLabel = p.createdAt ? new Date(p.createdAt).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' }) : '';
-      const imgHtml = p.image ? `<div class="post-img-wrap"><img src="${p.image}" alt="첨부 이미지"></div>` : '';
+      const imgs = p.images || (p.image ? [p.image] : []);
+      let imgHtml = '';
+      if (imgs.length === 1) {
+        imgHtml = `<div class="post-img-wrap"><img src="${imgs[0]}" alt="첨부 이미지"></div>`;
+      } else if (imgs.length > 1) {
+        imgHtml = `<div class="post-img-grid">${imgs.map((src, i) => `<img src="${src}" alt="첨부 이미지 ${i + 1}">`).join('')}</div>`;
+      }
       return `
         <div class="post-card">
           <div class="meta">
@@ -161,7 +167,7 @@ window.PhantomFeed = {
     const charCount = document.getElementById('charCount');
     const composeImageInput = document.getElementById('composeImageInput');
     const imagePreviewWrap = document.getElementById('imagePreviewWrap');
-    const imagePreview = document.getElementById('imagePreview');
+    const imagePreviewList = document.getElementById('imagePreviewList');
 
     if (composeDate) composeDate.value = getTodayStr();
 
@@ -169,32 +175,77 @@ window.PhantomFeed = {
       if (charCount) charCount.textContent = composeText.value.length;
     });
 
+    const renderPreviewList = () => {
+      const imgs = window.PhantomFeed.currentBase64Images || [];
+      if (!imgs.length) {
+        if (imagePreviewWrap) imagePreviewWrap.style.display = 'none';
+        if (imagePreviewList) imagePreviewList.innerHTML = '';
+        return;
+      }
+      if (imagePreviewWrap) imagePreviewWrap.style.display = 'block';
+      if (imagePreviewList) {
+        imagePreviewList.innerHTML = imgs.map((src, idx) => `
+          <div class="image-preview-item">
+            <img src="${src}" alt="미리보기 ${idx + 1}">
+            <button type="button" class="remove-img-btn" data-index="${idx}" title="사진 삭제">✕</button>
+          </div>
+        `).join('');
+      }
+    };
+
     const clearImagePreview = () => {
-      window.PhantomFeed.currentBase64Image = null;
+      window.PhantomFeed.currentBase64Images = [];
       if (composeImageInput) composeImageInput.value = '';
-      if (imagePreview) imagePreview.src = '';
-      if (imagePreviewWrap) imagePreviewWrap.style.display = 'none';
+      renderPreviewList();
     };
 
     composeImageInput?.addEventListener('change', async (e) => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const base64 = await window.PhantomUtils.compressImage(file);
-      if (base64) {
-        window.PhantomFeed.currentBase64Image = base64;
-        if (imagePreview) imagePreview.src = base64;
-        if (imagePreviewWrap) imagePreviewWrap.style.display = 'inline-block';
+      const files = Array.from(e.target.files || []);
+      if (!files.length) return;
+
+      const current = window.PhantomFeed.currentBase64Images || [];
+      const remainSpace = 5 - current.length;
+      if (remainSpace <= 0) {
+        toast('이미지는 최대 5장까지 첨부할 수 있습니다.');
+        if (composeImageInput) composeImageInput.value = '';
+        return;
+      }
+
+      const selectedFiles = files.slice(0, remainSpace);
+      const compressedList = await Promise.all(
+        selectedFiles.map(file => window.PhantomUtils.compressImage(file))
+      );
+
+      const validCompressed = compressedList.filter(Boolean);
+      if (validCompressed.length) {
+        window.PhantomFeed.currentBase64Images = [...current, ...validCompressed];
+        renderPreviewList();
       } else {
         toast('이미지를 처리하지 못했어요.');
       }
+      if (composeImageInput) composeImageInput.value = '';
     });
 
-    document.getElementById('removeImageBtn')?.addEventListener('click', clearImagePreview);
+    imagePreviewList?.addEventListener('click', (e) => {
+      const btn = e.target.closest('.remove-img-btn');
+      if (btn) {
+        const idx = parseInt(btn.dataset.index, 10);
+        if (!isNaN(idx)) {
+          window.PhantomFeed.currentBase64Images.splice(idx, 1);
+          renderPreviewList();
+        }
+        return;
+      }
+      const img = e.target.closest('.image-preview-item img');
+      if (img && img.src) {
+        window.PhantomUtils.openImageModal(img.src);
+      }
+    });
 
     document.getElementById('postBtn')?.addEventListener('click', () => {
       const content = composeText.value.trim();
-      const image = window.PhantomFeed.currentBase64Image;
-      if (!content && !image) return;
+      const images = window.PhantomFeed.currentBase64Images || [];
+      if (!content && !images.length) return;
 
       const date = composeDate.value || getTodayStr();
       const category = composeCategory.value || defaultCatKey();
@@ -204,7 +255,8 @@ window.PhantomFeed = {
         content,
         date,
         category,
-        image,
+        images: [...images],
+        image: images[0] || null,
         createdAt: new Date().toISOString()
       });
       saveData();
@@ -217,8 +269,13 @@ window.PhantomFeed = {
       toast('게시했어요.');
     });
 
-    // 이벤트 위임: 피드 포스트 삭제 버튼
+    // 이벤트 위임: 피드 포스트 (이미지 클릭 및 삭제 버튼)
     document.getElementById('feedList')?.addEventListener('click', (e) => {
+      const img = e.target.closest('.post-img-wrap img, .post-img-grid img');
+      if (img && img.src) {
+        window.PhantomUtils.openImageModal(img.src);
+        return;
+      }
       const delBtn = e.target.closest('.actions button[data-id]');
       if (!delBtn) return;
       const id = delBtn.dataset.id;
