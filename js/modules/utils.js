@@ -32,11 +32,8 @@ window.PhantomUtils = {
     return `https://www.google.com/calendar/render?${params.toString()}`;
   },
   compressImage(file, maxWidth = 1000, maxHeight = 1000, quality = 0.75) {
-    return new Promise((resolve, reject) => {
-      if (!file || !file.type.startsWith('image/')) {
-        resolve(null);
-        return;
-      }
+    return new Promise((resolve) => {
+      if (!file || !file.type.startsWith('image/')) return resolve(null);
       const reader = new FileReader();
       reader.onerror = () => resolve(null);
       reader.onload = e => {

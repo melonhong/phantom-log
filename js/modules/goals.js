@@ -12,6 +12,16 @@ window.PhantomGoals = {
     return state.data.monthly[key];
   },
 
+  getCurrentMonthData() {
+    const key = window.PhantomGoals.monthKey(window.PhantomGoals.goalsCursor);
+    return window.PhantomGoals.ensureMonth(key);
+  },
+
+  changeMonth(offset) {
+    window.PhantomGoals.goalsCursor.setMonth(window.PhantomGoals.goalsCursor.getMonth() + offset);
+    window.PhantomGoals.renderGoals();
+  },
+
   renderGoals() {
     const goalsTitle = document.getElementById('goalsTitle');
     const list = document.getElementById('goalsList');
@@ -20,39 +30,21 @@ window.PhantomGoals = {
 
     const y = window.PhantomGoals.goalsCursor.getFullYear(), m = window.PhantomGoals.goalsCursor.getMonth();
     goalsTitle.textContent = `${y}년 ${m + 1}월`;
-    const key = window.PhantomGoals.monthKey(window.PhantomGoals.goalsCursor);
-    const md = window.PhantomGoals.ensureMonth(key);
 
-    const { state, saveData } = window.PhantomStorage;
+    const md = window.PhantomGoals.getCurrentMonthData();
     const { escapeHtml } = window.PhantomUtils;
-
-    list.innerHTML = '';
 
     if (md.goals.length === 0) {
       list.innerHTML = `<div class="empty-state" style="padding:16px 0;">이번 달 목표를 추가해보세요.</div>`;
+    } else {
+      list.innerHTML = md.goals.map(g => `
+        <div class="goal-row${g.done ? ' done' : ''}">
+          <input type="checkbox" data-id="${g.id}" ${g.done ? 'checked' : ''}>
+          <span>${escapeHtml(g.text)}</span>
+          <button class="del" data-id="${g.id}">✕</button>
+        </div>`
+      ).join('');
     }
-
-    md.goals.forEach(g => {
-      const row = document.createElement('div');
-      row.className = 'goal-row' + (g.done ? ' done' : '');
-      row.innerHTML = `
-        <input type="checkbox" ${g.done ? 'checked' : ''}>
-        <span>${escapeHtml(g.text)}</span>
-        <button class="del">✕</button>`;
-
-      row.querySelector('input').addEventListener('change', e => {
-        g.done = e.target.checked;
-        saveData();
-        window.PhantomGoals.renderGoals();
-      });
-
-      row.querySelector('.del').addEventListener('click', () => {
-        md.goals = md.goals.filter(x => x.id !== g.id);
-        saveData();
-        window.PhantomGoals.renderGoals();
-      });
-      list.appendChild(row);
-    });
 
     if (retroText) retroText.value = md.retro || '';
   },
@@ -65,9 +57,7 @@ window.PhantomGoals = {
 
     const { uid } = window.PhantomUtils;
     const { saveData } = window.PhantomStorage;
-
-    const key = window.PhantomGoals.monthKey(window.PhantomGoals.goalsCursor);
-    const md = window.PhantomGoals.ensureMonth(key);
+    const md = window.PhantomGoals.getCurrentMonthData();
 
     md.goals.push({ id: uid(), text, done: false });
     saveData();
@@ -78,37 +68,47 @@ window.PhantomGoals = {
   initGoals() {
     const { saveData } = window.PhantomStorage;
 
-    const addGoalBtn = document.getElementById('addGoalBtn');
-    if (addGoalBtn) addGoalBtn.addEventListener('click', window.PhantomGoals.addGoal);
+    document.getElementById('addGoalBtn')?.addEventListener('click', window.PhantomGoals.addGoal);
+    document.getElementById('newGoalInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.PhantomGoals.addGoal(); });
+    document.getElementById('prevMonthG')?.addEventListener('click', () => window.PhantomGoals.changeMonth(-1));
+    document.getElementById('nextMonthG')?.addEventListener('click', () => window.PhantomGoals.changeMonth(1));
 
-    const newGoalInput = document.getElementById('newGoalInput');
-    if (newGoalInput) {
-      newGoalInput.addEventListener('keydown', e => { if (e.key === 'Enter') window.PhantomGoals.addGoal(); });
-    }
+    const list = document.getElementById('goalsList');
+    if (list) {
+      list.addEventListener('click', e => {
+        const delBtn = e.target.closest('.del[data-id]');
+        if (!delBtn) return;
+        const md = window.PhantomGoals.getCurrentMonthData();
+        md.goals = md.goals.filter(x => x.id !== delBtn.dataset.id);
+        saveData();
+        window.PhantomGoals.renderGoals();
+      });
 
-    let retroTimer;
-    const retroText = document.getElementById('retroText');
-    if (retroText) {
-      retroText.addEventListener('input', e => {
-        const key = window.PhantomGoals.monthKey(window.PhantomGoals.goalsCursor);
-        const md = window.PhantomGoals.ensureMonth(key);
-        md.retro = e.target.value;
-
-        clearTimeout(retroTimer);
-        const hint = document.getElementById('retroSaved');
-        if (hint) hint.textContent = '저장 중...';
-
-        retroTimer = setTimeout(() => {
+      list.addEventListener('change', e => {
+        if (e.target.type !== 'checkbox') return;
+        const md = window.PhantomGoals.getCurrentMonthData();
+        const goal = md.goals.find(x => x.id === e.target.dataset.id);
+        if (goal) {
+          goal.done = e.target.checked;
           saveData();
-          if (hint) hint.textContent = '자동 저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
-        }, 700);
+          window.PhantomGoals.renderGoals();
+        }
       });
     }
 
-    const prevMonthG = document.getElementById('prevMonthG');
-    if (prevMonthG) prevMonthG.addEventListener('click', () => { window.PhantomGoals.goalsCursor.setMonth(window.PhantomGoals.goalsCursor.getMonth() - 1); window.PhantomGoals.renderGoals(); });
+    let retroTimer;
+    document.getElementById('retroText')?.addEventListener('input', e => {
+      const md = window.PhantomGoals.getCurrentMonthData();
+      md.retro = e.target.value;
 
-    const nextMonthG = document.getElementById('nextMonthG');
-    if (nextMonthG) nextMonthG.addEventListener('click', () => { window.PhantomGoals.goalsCursor.setMonth(window.PhantomGoals.goalsCursor.getMonth() + 1); window.PhantomGoals.renderGoals(); });
+      clearTimeout(retroTimer);
+      const hint = document.getElementById('retroSaved');
+      if (hint) hint.textContent = '저장 중...';
+
+      retroTimer = setTimeout(() => {
+        saveData();
+        if (hint) hint.textContent = '자동 저장됨 · ' + new Date().toLocaleTimeString('ko-KR');
+      }, 700);
+    });
   }
 };

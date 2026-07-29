@@ -7,6 +7,29 @@ window.PhantomCalendar = {
     window.PhantomCalendar.renderFeedRef = fn;
   },
 
+  changeMonth(offset) {
+    window.PhantomCalendar.calCursor.setMonth(window.PhantomCalendar.calCursor.getMonth() + offset);
+    window.PhantomCalendar.renderCalendar();
+  },
+
+  toggleModal(show, defaultDate) {
+    if (show) {
+      document.getElementById('todoDate').value = defaultDate || window.PhantomUtils.getTodayStr();
+      document.getElementById('todoContent').value = '';
+      document.getElementById('todoTime').value = '';
+    }
+    document.getElementById('todoOverlay')?.classList.toggle('show', show);
+  },
+
+  bindTodoEvents(el, todo, targetDate) {
+    const chk = el.querySelector('input[type="checkbox"]');
+    if (chk) chk.onchange = e => { todo.done = e.target.checked; window.PhantomCalendar.refreshUI(targetDate); };
+    el.querySelector('.del')?.addEventListener('click', () => {
+      window.PhantomStorage.state.data.todos = window.PhantomStorage.state.data.todos.filter(x => x.id !== todo.id);
+      window.PhantomCalendar.refreshUI(targetDate);
+    });
+  },
+
   renderCalendar() {
     const calTitle = document.getElementById('calTitle');
     const calGrid = document.getElementById('calGrid');
@@ -21,9 +44,7 @@ window.PhantomCalendar = {
     const daysInMonth = new Date(y, m + 1, 0).getDate();
 
     for (let i = 0; i < firstDay; i++) {
-      const e = document.createElement('div');
-      e.className = 'day empty';
-      calGrid.appendChild(e);
+      calGrid.insertAdjacentHTML('beforeend', '<div class="day empty"></div>');
     }
 
     const { state } = window.PhantomStorage;
@@ -32,32 +53,15 @@ window.PhantomCalendar = {
     for (let d = 1; d <= daysInMonth; d++) {
       const dateStr = `${y}-${pad(m + 1)}-${pad(d)}`;
       const cell = document.createElement('div');
-      cell.className = 'day';
-      if (dateStr === todayStr) cell.classList.add('today');
-      if (dateStr === window.PhantomCalendar.selectedDate) cell.classList.add('selected');
-
-      const num = document.createElement('div');
-      num.className = 'num';
-      num.textContent = d;
-      cell.appendChild(num);
+      cell.className = `day${dateStr === todayStr ? ' today' : ''}${dateStr === window.PhantomCalendar.selectedDate ? ' selected' : ''}`;
+      cell.innerHTML = `<div class="num">${d}</div>`;
 
       const hasPost = state.data.posts.some(p => p.date === dateStr);
       const hasTodo = state.data.todos.some(t => t.date === dateStr);
 
       if (hasPost || hasTodo) {
-        const blots = document.createElement('div');
-        blots.className = 'blots';
-        if (hasPost) {
-          const b = document.createElement('div');
-          b.className = 'blot post';
-          blots.appendChild(b);
-        }
-        if (hasTodo) {
-          const b = document.createElement('div');
-          b.className = 'blot todo';
-          blots.appendChild(b);
-        }
-        cell.appendChild(blots);
+        const blotsHtml = `${hasPost ? '<div class="blot post"></div>' : ''}${hasTodo ? '<div class="blot todo"></div>' : ''}`;
+        cell.insertAdjacentHTML('beforeend', `<div class="blots">${blotsHtml}</div>`);
       }
 
       cell.addEventListener('click', () => window.PhantomCalendar.selectDay(dateStr));
@@ -77,13 +81,12 @@ window.PhantomCalendar = {
   },
 
   refreshUI(dateStr) {
-    const { saveData } = window.PhantomStorage;
-    saveData();
-    this.renderCalendar();
-    const targetDate = this.selectedDate || dateStr;
-    if (targetDate) this.renderDayEntries(targetDate);
-    if (this.renderTodayTab) this.renderTodayTab();
-    if (this.renderFeedRef) this.renderFeedRef();
+    window.PhantomStorage.saveData();
+    window.PhantomCalendar.renderCalendar();
+    const targetDate = window.PhantomCalendar.selectedDate || dateStr;
+    if (targetDate) window.PhantomCalendar.renderDayEntries(targetDate);
+    if (window.PhantomCalendar.renderTodayTab) window.PhantomCalendar.renderTodayTab();
+    if (window.PhantomCalendar.renderFeedRef) window.PhantomCalendar.renderFeedRef();
   },
 
   renderDayEntries(dateStr) {
@@ -111,7 +114,7 @@ window.PhantomCalendar = {
 
       el.querySelector('.del').onclick = () => {
         state.data.posts = state.data.posts.filter(x => x.id !== p.id);
-        this.refreshUI(dateStr);
+        window.PhantomCalendar.refreshUI(dateStr);
       };
       wrap.appendChild(el);
     });
@@ -130,16 +133,7 @@ window.PhantomCalendar = {
           <button class="del">삭제</button>
         </div>`;
 
-      el.querySelector('.todo-check').onchange = e => {
-        t.done = e.target.checked;
-        this.refreshUI(dateStr);
-      };
-
-      el.querySelector('.del').onclick = () => {
-        state.data.todos = state.data.todos.filter(x => x.id !== t.id);
-        this.refreshUI(dateStr);
-      };
-
+      window.PhantomCalendar.bindTodoEvents(el, t, dateStr);
       wrap.appendChild(el);
     });
   },
@@ -174,16 +168,7 @@ window.PhantomCalendar = {
         </div>
         <button class="del">삭제</button>`;
 
-      row.querySelector('input').onchange = e => {
-        t.done = e.target.checked;
-        this.refreshUI(todayStr);
-      };
-
-      row.querySelector('.del').onclick = () => {
-        state.data.todos = state.data.todos.filter(x => x.id !== t.id);
-        this.refreshUI(todayStr);
-      };
-
+      window.PhantomCalendar.bindTodoEvents(row, t, todayStr);
       wrap.appendChild(row);
     });
   },
@@ -192,64 +177,33 @@ window.PhantomCalendar = {
     const { getTodayStr, uid, toast } = window.PhantomUtils;
     const { state, saveData } = window.PhantomStorage;
 
-    const prevMonthBtn = document.getElementById('prevMonth');
-    const nextMonthBtn = document.getElementById('nextMonth');
-    if (prevMonthBtn) prevMonthBtn.addEventListener('click', () => { window.PhantomCalendar.calCursor.setMonth(window.PhantomCalendar.calCursor.getMonth() - 1); window.PhantomCalendar.renderCalendar(); });
-    if (nextMonthBtn) nextMonthBtn.addEventListener('click', () => { window.PhantomCalendar.calCursor.setMonth(window.PhantomCalendar.calCursor.getMonth() + 1); window.PhantomCalendar.renderCalendar(); });
+    document.getElementById('prevMonth')?.addEventListener('click', () => window.PhantomCalendar.changeMonth(-1));
+    document.getElementById('nextMonth')?.addEventListener('click', () => window.PhantomCalendar.changeMonth(1));
+    document.getElementById('quickAddTodoBtn')?.addEventListener('click', () => window.PhantomCalendar.toggleModal(true));
+    document.getElementById('btnGoTodo')?.addEventListener('click', () => window.PhantomCalendar.toggleModal(true, window.PhantomCalendar.selectedDate));
+    document.getElementById('todoCancel')?.addEventListener('click', () => window.PhantomCalendar.toggleModal(false));
+    document.getElementById('todoOverlay')?.addEventListener('click', (e) => e.target.id === 'todoOverlay' && window.PhantomCalendar.toggleModal(false));
 
-    const quickAddBtn = document.getElementById('quickAddTodoBtn');
-    if (quickAddBtn) {
-      quickAddBtn.addEventListener('click', () => {
-        document.getElementById('todoDate').value = getTodayStr();
-        document.getElementById('todoContent').value = '';
-        document.getElementById('todoTime').value = '';
-        document.getElementById('todoOverlay').classList.add('show');
-      });
-    }
+    document.getElementById('todoSave')?.addEventListener('click', () => {
+      const content = document.getElementById('todoContent').value.trim();
+      const date = document.getElementById('todoDate').value;
+      const time = document.getElementById('todoTime').value;
 
-    const btnGoTodo = document.getElementById('btnGoTodo');
-    if (btnGoTodo) {
-      btnGoTodo.addEventListener('click', () => {
-        document.getElementById('todoDate').value = window.PhantomCalendar.selectedDate || getTodayStr();
-        document.getElementById('todoContent').value = '';
-        document.getElementById('todoTime').value = '';
-        document.getElementById('todoOverlay').classList.add('show');
-      });
-    }
+      if (!content || !date) {
+        toast('내용과 날짜를 입력해주세요.');
+        return;
+      }
 
-    const todoCancel = document.getElementById('todoCancel');
-    if (todoCancel) todoCancel.addEventListener('click', () => document.getElementById('todoOverlay').classList.remove('show'));
+      state.data.todos.push({ id: uid(), content, date, time, done: false, reminded: false });
+      saveData();
+      window.PhantomCalendar.toggleModal(false);
+      window.PhantomCalendar.renderCalendar();
 
-    const todoOverlay = document.getElementById('todoOverlay');
-    if (todoOverlay) {
-      todoOverlay.addEventListener('click', (e) => {
-        if (e.target.id === 'todoOverlay') e.currentTarget.classList.remove('show');
-      });
-    }
+      const todayStr = getTodayStr();
+      if (window.PhantomCalendar.selectedDate === date) window.PhantomCalendar.renderDayEntries(date);
+      if (date === todayStr) window.PhantomCalendar.renderTodayTab();
 
-    const todoSave = document.getElementById('todoSave');
-    if (todoSave) {
-      todoSave.addEventListener('click', () => {
-        const content = document.getElementById('todoContent').value.trim();
-        const date = document.getElementById('todoDate').value;
-        const time = document.getElementById('todoTime').value;
-
-        if (!content || !date) {
-          toast('내용과 날짜를 입력해주세요.');
-          return;
-        }
-
-        state.data.todos.push({ id: uid(), content, date, time, done: false, reminded: false });
-        saveData();
-        document.getElementById('todoOverlay').classList.remove('show');
-        window.PhantomCalendar.renderCalendar();
-
-        const todayStr = getTodayStr();
-        if (window.PhantomCalendar.selectedDate === date) window.PhantomCalendar.renderDayEntries(date);
-        if (date === todayStr) window.PhantomCalendar.renderTodayTab();
-
-        toast('할 일이 추가됐어요.');
-      });
-    }
+      toast('할 일이 추가됐어요.');
+    });
   }
 };

@@ -34,13 +34,13 @@ window.PhantomStorage = {
     try {
       const res = await window.PhantomStorage.storageGet(STORE_KEY);
       if (res && res.value) {
-        window.PhantomStorage.state.data = JSON.parse(res.value);
-        window.PhantomStorage.state.data.posts = window.PhantomStorage.state.data.posts || [];
-        window.PhantomStorage.state.data.todos = window.PhantomStorage.state.data.todos || [];
-        window.PhantomStorage.state.data.monthly = window.PhantomStorage.state.data.monthly || {};
-        window.PhantomStorage.state.data.categories = (window.PhantomStorage.state.data.categories && window.PhantomStorage.state.data.categories.length)
-          ? window.PhantomStorage.state.data.categories
-          : JSON.parse(JSON.stringify(CATS_DEFAULT));
+        const parsed = JSON.parse(res.value);
+        window.PhantomStorage.state.data = {
+          posts: parsed.posts || [],
+          todos: parsed.todos || [],
+          monthly: parsed.monthly || {},
+          categories: (parsed.categories && parsed.categories.length) ? parsed.categories : JSON.parse(JSON.stringify(CATS_DEFAULT))
+        };
       } else {
         window.PhantomStorage.state.data.categories = JSON.parse(JSON.stringify(CATS_DEFAULT));
       }

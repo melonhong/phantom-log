@@ -7,14 +7,10 @@ function renderAll() {
 }
 
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. 테마 초기화
   window.PhantomTheme.initTheme();
-
-  // 2. 렌더 순환 모듈 바인딩
   window.PhantomCalendar.setRenderFeedCallback(window.PhantomFeed.renderFeed);
 
-  // 3. 각 모듈 이벤트 등록
-  window.PhantomNav.initNavigation((subOrView) => {
+  window.PhantomNav.initNavigation(subOrView => {
     if (subOrView === 'today') {
       window.PhantomCalendar.renderTodayTab();
     } else if (subOrView === 'grid' || subOrView === 'cal') {
@@ -24,13 +20,13 @@ document.addEventListener('DOMContentLoaded', async () => {
       }
     }
   });
+
   window.PhantomCalendar.initCalendar();
   window.PhantomFeed.initFeed();
   window.PhantomGoals.initGoals();
   window.PhantomBackup.initBackup(renderAll);
   window.PhantomNotification.initNotification();
 
-  // 4. 레이블 및 기본 안내 문구 설정
   const todayLabel = document.getElementById('todayLabel');
   if (todayLabel) {
     todayLabel.textContent = new Date().toLocaleDateString('ko-KR', {
@@ -41,7 +37,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   }
 
-  // 5. 데이터 로드 및 초기 렌더링
   await window.PhantomStorage.loadData();
 
   const storageNotice = document.getElementById('storageNotice');

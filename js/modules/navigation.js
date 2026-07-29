@@ -1,25 +1,22 @@
 window.PhantomNav = {
-  initNavigation(onTabChange) {
-    document.querySelectorAll('nav.tabs button').forEach(btn => {
+  // 탭 전환 공통 처리 헬퍼 (버튼 셀렉터, 뷰 셀렉터, dataset 키, 뷰 ID 접두사, 콜백)
+  setupTabSwitch(btnSelector, viewSelector, dataKey, prefix, onTabChange) {
+    const buttons = document.querySelectorAll(btnSelector);
+    const views = document.querySelectorAll(viewSelector);
+    buttons.forEach(btn => {
       btn.addEventListener('click', () => {
-        document.querySelectorAll('nav.tabs button').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('section.view').forEach(v => v.classList.remove('active'));
+        buttons.forEach(b => b.classList.remove('active'));
+        views.forEach(v => v.classList.remove('active'));
         btn.classList.add('active');
-        const targetView = document.getElementById('view-' + btn.dataset.view);
-        if (targetView) targetView.classList.add('active');
-        if (typeof onTabChange === 'function') onTabChange(btn.dataset.view);
+        const val = btn.dataset[dataKey];
+        document.getElementById(prefix + val)?.classList.add('active');
+        if (typeof onTabChange === 'function') onTabChange(val);
       });
     });
+  },
 
-    document.querySelectorAll('.subtab').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.subtab').forEach(b => b.classList.remove('active'));
-        document.querySelectorAll('.sub-view').forEach(v => v.classList.remove('active'));
-        btn.classList.add('active');
-        const targetSub = document.getElementById('sub-' + btn.dataset.sub);
-        if (targetSub) targetSub.classList.add('active');
-        if (typeof onTabChange === 'function') onTabChange(btn.dataset.sub);
-      });
-    });
+  initNavigation(onTabChange) {
+    this.setupTabSwitch('nav.tabs button', 'section.view', 'view', 'view-', onTabChange);
+    this.setupTabSwitch('.subtab', '.sub-view', 'sub', 'sub-', onTabChange);
   }
 };
