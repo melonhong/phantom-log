@@ -211,5 +211,45 @@ window.PhantomCalendar = {
 
       toast('할 일이 추가됐어요.');
     });
+
+    window.PhantomCalendar.renderQuote();
+  },
+
+  async renderQuote() {
+    const textEl = document.getElementById('quoteText');
+    const authorEl = document.getElementById('quoteAuthor');
+    if (!textEl || !authorEl) return;
+
+    const dummyQuotes = [
+      { quote: "Success is the sum of small efforts, repeated day in and day out.", author: "Robert Collier" },
+      { quote: "Action is the foundational key to all success.", author: "Pablo Picasso" },
+      { quote: "The best way to predict the future is to create it.", author: "Peter Drucker" }
+    ];
+
+    try {
+      // file:// 로컬 파일로 접근한 경우 브라우저 보안 정책상 외부 fetch가 차단되므로 바로 Fallback 사용
+      if (window.location.protocol === 'file:') {
+        throw new Error('Local file protocol detected');
+      }
+
+      // ZenQuotes API 호출 (CORS 호환을 위해 올오리진 프록시 활용)
+      const targetUrl = encodeURIComponent('https://zenquotes.io/api/today');
+      const res = await fetch(`https://api.allorigins.win/raw?url=${targetUrl}`);
+      if (!res.ok) throw new Error('ZenQuotes API 실패');
+      
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0 && data[0].q) {
+        textEl.textContent = data[0].q;
+        authorEl.textContent = `- ${data[0].a}`;
+        return;
+      }
+    } catch (e) {
+      // 로컬 프로토콜이거나 API 오류 시 기본 명언 표시
+    }
+
+    const todayIdx = new Date().getDate() % dummyQuotes.length;
+    const selected = dummyQuotes[todayIdx];
+    textEl.textContent = selected.quote;
+    authorEl.textContent = `- ${selected.author}`;
   }
 };
