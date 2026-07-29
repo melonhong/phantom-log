@@ -1,0 +1,113 @@
+/* =========================================
+   8. Modals & Overlay Utilities (모달 및 유틸)
+   ========================================= */
+.overlay {
+  position: fixed; 
+  inset: 0; 
+  background: rgba(0, 0, 0, 0.4); 
+  backdrop-filter: blur(4px); 
+  -webkit-backdrop-filter: blur(4px);
+  display: none; 
+  align-items: flex-end; 
+  justify-content: center; 
+  z-index: 100;
+}
+
+.overlay.show { 
+  display: flex; 
+}
+
+.modal {
+  width: 100%; 
+  max-width: 560px; 
+  background: var(--surface-indigo); 
+  border-radius: 28px 28px 0 0; 
+  padding: 32px 24px 40px; 
+  animation: slideUpModal 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpModal { 
+  from { transform: translateY(100%); } 
+  to { transform: translateY(0); } 
+}
+
+.modal h3 { 
+  font-size: 20px; 
+  font-weight: 800; 
+  margin: 0 0 24px; 
+}
+
+.field { 
+  margin-bottom: 16px; 
+}
+
+.field label { 
+  display: block; 
+  font-size: 13px; 
+  color: var(--ink-dim); 
+  margin-bottom: 8px; 
+  font-weight: 700; 
+}
+
+.field input, 
+.field textarea { 
+  width: 100%; 
+  background: var(--surface-onyx); 
+  border: none; 
+  border-radius: var(--rounded-sm); 
+  padding: 14px; 
+  font-size: 15px; 
+  outline: none; 
+  font-family: inherit; 
+  color: var(--ink); 
+}
+
+.modal .btn-row { 
+  display: flex; 
+  gap: 12px; 
+  margin-top: 24px; 
+}
+
+.modal .btn-row button { 
+  flex: 1; 
+  padding: 16px; 
+  border-radius: var(--rounded-pill); 
+  font-weight: 700; 
+  font-size: 15px; 
+  transition: transform 0.2s; 
+}
+
+.modal .btn-cancel { 
+  background: var(--surface-onyx); 
+  color: var(--ink-dim); 
+}
+
+.modal .btn-save { 
+  background: var(--green); 
+  color: var(--ink-dark); 
+}
+
+.modal .btn-save:hover { 
+  background: var(--green-hover); 
+  transform: scale(1.02); 
+}
+
+.cat-manage-row { 
+  display: flex; 
+  align-items: center; 
+  gap: 12px; 
+  padding: 12px 0; 
+  border-bottom: 1px solid var(--border); 
+}
+
+.cat-manage-row span { 
+  flex: 1; 
+  font-size: 15px; 
+  font-weight: 600; 
+}
+
+.cat-manage-row .del { 
+  color: var(--ink-faint); 
+  font-size: 14px; 
+  font-weight: 700; 
+}

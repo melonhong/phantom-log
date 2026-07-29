@@ -1,0 +1,95 @@
+/* =========================================
+   1. Design Tokens & Variables
+   ========================================= */
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700;9..40,800&display=swap');
+
+:root {
+  /* Light Theme (Default) */
+  --canvas: #f4f2f9; 
+  --surface-indigo: #ffffff;        
+  --surface-onyx: #f9f8fc;          
+  --surface-nav: rgba(253, 252, 254, 0.85);
+  --primary: rgb(60, 49, 91);
+  --green: rgb(171, 159, 242);
+  --green-hover: rgb(155, 140, 230);
+  --ink: rgb(60, 49, 91);
+  --ink-dark: #ffffff;
+  --ink-dim: rgba(60, 49, 91, 0.6);
+  --ink-faint: rgba(60, 49, 91, 0.3);
+  --border: rgba(60, 49, 91, 0.1);
+  --shadow-soft: 0 4px 12px rgba(60, 49, 91, 0.04);
+  --color-hover-bg: rgba(60, 49, 91, 0.05);
+
+  /* Radii Scale */
+  --rounded-sm: 12px;
+  --rounded-lg: 16px;
+  --rounded-xl: 24px;
+  --rounded-pill: 9999px;
+
+  --font-family-base: 'DM Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+/* Dark Theme */
+[data-theme="dark"] {
+  --canvas: #171221;
+  --surface-indigo: #241c36;
+  --surface-onyx: #1d162b;
+  --surface-nav: rgba(36, 28, 54, 0.85);
+  --primary: #b3a5fc;
+  --green: #ab9ff2;
+  --green-hover: #c4bbf7;
+  --ink: #f4f2f9;
+  --ink-dark: #171221;
+  --ink-dim: rgba(244, 242, 249, 0.6);
+  --ink-faint: rgba(244, 242, 249, 0.3);
+  --border: rgba(244, 242, 249, 0.1);
+  --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --color-hover-bg: rgba(244, 242, 249, 0.05);
+}
+
+/* =========================================
+   2. Base Reset & Root Setup
+   ========================================= */
+* { 
+  box-sizing: border-box; 
+  -webkit-tap-highlight-color: transparent; 
+  margin: 0; 
+  padding: 0; 
+}
+
+html, body { 
+  min-height: 100vh; 
+}
+
+body {
+  background-color: var(--canvas);
+  color: var(--ink);
+  font-family: var(--font-family-base);
+  display: flex;
+  justify-content: center;
+  -webkit-font-smoothing: antialiased;
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+a { 
+  text-decoration: none; 
+  color: inherit; 
+}
+
+button { 
+  border: none; 
+  background: none; 
+  cursor: pointer; 
+  font-family: inherit; 
+  color: inherit; 
+}
+
+#app { 
+  width: 100%; 
+  max-width: 600px; 
+  min-height: 100vh; 
+  display: flex; 
+  flex-direction: column; 
+  position: relative; 
+  padding: 0 16px; 
+}
