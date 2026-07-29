@@ -104,9 +104,15 @@
           </div>
         </div>
 
-        <div class="search-box">
-          <span class="icon">⌕</span>
-          <input type="text" id="searchInput" placeholder="내가 쓴 글 검색...">
+        <div class="search-row">
+          <div class="search-box">
+            <span class="icon">⌕</span>
+            <input type="text" id="searchInput" placeholder="내가 쓴 글 검색...">
+          </div>
+          <div class="search-date-wrap">
+            <input type="date" id="searchDateInput" title="날짜별 글 검색">
+            <button type="button" id="clearSearchDateBtn" class="clear-date-btn" title="날짜 필터 초기화" style="display:none;">✕</button>
+          </div>
         </div>
 
         <div class="cat-chips" id="catChips"></div>

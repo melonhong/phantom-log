@@ -92,17 +92,25 @@ window.PhantomFeed = {
 
   renderFeed() {
     const searchInput = document.getElementById('searchInput');
+    const searchDateInput = document.getElementById('searchDateInput');
+    const clearSearchDateBtn = document.getElementById('clearSearchDateBtn');
     const list = document.getElementById('feedList');
-    if (!searchInput || !list) return;
+    if (!list) return;
 
     const { state, defaultCatKey } = window.PhantomStorage;
-    const q = searchInput.value.trim().toLowerCase();
+    const q = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    const searchDate = searchDateInput ? searchDateInput.value : '';
+
+    if (clearSearchDateBtn) {
+      clearSearchDateBtn.style.display = searchDate ? 'inline-flex' : 'none';
+    }
 
     let posts = [...state.data.posts].sort((a, b) => {
       if (b.date !== a.date) return b.date.localeCompare(a.date);
       return new Date(b.createdAt || 0) - new Date(a.createdAt || 0);
     });
 
+    if (searchDate) posts = posts.filter(p => p.date === searchDate);
     if (q) posts = posts.filter(p => p.content.toLowerCase().includes(q));
     if (window.PhantomFeed.activeCategory) posts = posts.filter(p => (p.category || defaultCatKey()) === window.PhantomFeed.activeCategory);
 
@@ -111,7 +119,7 @@ window.PhantomFeed = {
     list.innerHTML = '';
 
     if (window.PhantomFeed.filteredPosts.length === 0) {
-      list.innerHTML = `<div class="empty-state">${q || window.PhantomFeed.activeCategory ? '해당하는 글이 없어요.' : '아직 쓴 글이 없어요. 오늘의 생각을 남겨보세요.'}</div>`;
+      list.innerHTML = `<div class="empty-state">${q || searchDate || window.PhantomFeed.activeCategory ? '해당하는 글이 없어요.' : '아직 쓴 글이 없어요. 오늘의 생각을 남겨보세요.'}</div>`;
       return;
     }
 
@@ -166,9 +174,14 @@ window.PhantomFeed = {
     if (!post) return;
 
     const searchInput = document.getElementById('searchInput');
+    const searchDateInput = document.getElementById('searchDateInput');
     let needRender = false;
     if (searchInput && searchInput.value.trim() !== '') {
       searchInput.value = '';
+      needRender = true;
+    }
+    if (searchDateInput && searchDateInput.value !== '') {
+      searchDateInput.value = '';
       needRender = true;
     }
     if (window.PhantomFeed.activeCategory && post.category !== window.PhantomFeed.activeCategory) {
@@ -360,6 +373,14 @@ window.PhantomFeed = {
     document.getElementById('addCatBtn')?.addEventListener('click', window.PhantomFeed.addCategory);
     document.getElementById('newCatInput')?.addEventListener('keydown', e => { if (e.key === 'Enter') window.PhantomFeed.addCategory(); });
     document.getElementById('searchInput')?.addEventListener('input', window.PhantomFeed.renderFeed);
+    document.getElementById('searchDateInput')?.addEventListener('change', window.PhantomFeed.renderFeed);
+    document.getElementById('clearSearchDateBtn')?.addEventListener('click', () => {
+      const searchDateInput = document.getElementById('searchDateInput');
+      if (searchDateInput) {
+        searchDateInput.value = '';
+        window.PhantomFeed.renderFeed();
+      }
+    });
 
     window.addEventListener('scroll', () => {
       const feedView = document.getElementById('view-feed');
