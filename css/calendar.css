@@ -164,6 +164,16 @@
   line-height: 1.5; 
 }
 
+.entry-mini.post-entry {
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.entry-mini.post-entry:hover {
+  background: var(--color-hover-bg);
+  transform: translateX(2px);
+}
+
 .entry-mini .tag { 
   font-size: 11px; 
   font-weight: 800; 

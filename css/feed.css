@@ -1,205 +1,205 @@
 /* =========================================
    6. Feed View (글 피드 탭)
    ========================================= */
-.compose { 
-  background: var(--surface-indigo); 
-  border-radius: var(--rounded-xl); 
-  padding: 20px; 
-  margin-bottom: 20px; 
-  box-shadow: var(--shadow-soft); 
+.compose {
+  background: var(--surface-indigo);
+  border-radius: var(--rounded-xl);
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow-soft);
 }
 
-.compose textarea { 
-  width: 100%; 
-  min-height: 90px; 
-  background: transparent; 
-  border: none; 
-  outline: none; 
-  resize: vertical; 
-  color: var(--ink); 
-  font-family: inherit; 
-  font-size: 15px; 
-  line-height: 1.5; 
+.compose textarea {
+  width: 100%;
+  min-height: 90px;
+  background: transparent;
+  border: none;
+  outline: none;
+  resize: vertical;
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.5;
 }
 
-.compose textarea::placeholder { 
-  color: var(--ink-faint); 
+.compose textarea::placeholder {
+  color: var(--ink-faint);
 }
 
-.compose .foot { 
-  display: flex; 
-  align-items: center; 
-  justify-content: space-between; 
-  margin-top: 12px; 
-  padding-top: 12px; 
-  border-top: 1px solid var(--border); 
+.compose .foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
 }
 
-.compose input[type=date], 
-.compose select { 
-  background: var(--surface-onyx); 
-  color: var(--ink-dim); 
-  border-radius: var(--rounded-sm); 
-  border: none; 
-  padding: 8px 12px; 
-  font-family: inherit; 
-  font-size: 13px; 
-  font-weight: 500; 
-  outline: none; 
+.compose input[type=date],
+.compose select {
+  background: var(--surface-onyx);
+  color: var(--ink-dim);
+  border-radius: var(--rounded-sm);
+  border: none;
+  padding: 8px 12px;
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  outline: none;
 }
 
-.compose .foot-row { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
+.compose .foot-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.compose .char { 
-  font-size: 12px; 
-  color: var(--ink-faint); 
-  font-weight: 700; 
+.compose .char {
+  font-size: 12px;
+  color: var(--ink-faint);
+  font-weight: 700;
 }
 
-.post-btn { 
-  background: var(--green); 
-  color: var(--ink-dark); 
-  padding: 10px 20px; 
-  border-radius: var(--rounded-pill); 
-  font-weight: 700; 
-  font-size: 14px; 
-  transition: transform 0.2s; 
+.post-btn {
+  background: var(--green);
+  color: var(--ink-dark);
+  padding: 10px 20px;
+  border-radius: var(--rounded-pill);
+  font-weight: 700;
+  font-size: 14px;
+  transition: transform 0.2s;
 }
 
-.post-btn:hover { 
-  background: var(--green-hover); 
-  transform: scale(1.05); 
+.post-btn:hover {
+  background: var(--green-hover);
+  transform: scale(1.05);
 }
 
 /* 검색 및 필터 */
-.search-box { 
-  position: relative; 
-  margin-bottom: 16px; 
+.search-box {
+  position: relative;
+  margin-bottom: 16px;
 }
 
-.search-box input { 
-  width: 100%; 
-  padding: 14px 16px 14px 42px; 
-  border-radius: var(--rounded-pill); 
-  border: none; 
-  background: var(--surface-indigo); 
-  color: var(--ink); 
-  font-size: 14px; 
-  outline: none; 
-  box-shadow: var(--shadow-soft); 
+.search-box input {
+  width: 100%;
+  padding: 14px 16px 14px 42px;
+  border-radius: var(--rounded-pill);
+  border: none;
+  background: var(--surface-indigo);
+  color: var(--ink);
+  font-size: 14px;
+  outline: none;
+  box-shadow: var(--shadow-soft);
 }
 
-.search-box .icon { 
-  position: absolute; 
-  left: 16px; 
-  top: 50%; 
-  transform: translateY(-50%); 
-  color: var(--ink-dim); 
-  font-size: 16px; 
+.search-box .icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--ink-dim);
+  font-size: 16px;
 }
 
-.cat-chips { 
-  display: flex; 
-  flex-wrap: wrap; 
-  gap: 8px; 
-  margin-bottom: 16px; 
+.cat-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
 }
 
-.cat-chip { 
-  font-size: 13px; 
-  font-weight: 700; 
-  padding: 8px 16px; 
-  border-radius: var(--rounded-pill); 
-  background: var(--surface-indigo); 
-  color: var(--ink-dim); 
-  transition: all 0.2s; 
-  box-shadow: var(--shadow-soft); 
+.cat-chip {
+  font-size: 13px;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: var(--rounded-pill);
+  background: var(--surface-indigo);
+  color: var(--ink-dim);
+  transition: all 0.2s;
+  box-shadow: var(--shadow-soft);
 }
 
-.cat-chip.active { 
-  color: var(--ink-dark) !important; 
-  background: var(--primary) !important; 
+.cat-chip.active {
+  color: var(--ink-dark) !important;
+  background: var(--primary) !important;
 }
 
-.cat-badge { 
-  font-size: 11px; 
-  font-weight: 800; 
-  padding: 4px 10px; 
-  border-radius: var(--rounded-pill); 
-  background: var(--surface-onyx); 
-  color: var(--ink-dim); 
+.cat-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 4px 10px;
+  border-radius: var(--rounded-pill);
+  background: var(--surface-onyx);
+  color: var(--ink-dim);
 }
 
-.manage-btn { 
-  font-weight: 700; 
-  font-size: 12px; 
-  color: var(--ink-dim); 
-  padding: 8px 16px; 
-  border-radius: var(--rounded-pill); 
-  background: var(--color-hover-bg); 
-  margin: -4px 0 16px; 
+.manage-btn {
+  font-weight: 700;
+  font-size: 12px;
+  color: var(--ink-dim);
+  padding: 8px 16px;
+  border-radius: var(--rounded-pill);
+  background: var(--color-hover-bg);
+  margin: -4px 0 16px;
 }
 
 /* 피드 카드 */
-.post-card { 
-  padding: 20px; 
-  background: var(--surface-indigo); 
-  border-radius: var(--rounded-xl); 
-  margin-bottom: 12px; 
-  box-shadow: var(--shadow-soft); 
+.post-card {
+  padding: 20px;
+  background: var(--surface-indigo);
+  border-radius: var(--rounded-xl);
+  margin-bottom: 12px;
+  box-shadow: var(--shadow-soft);
 }
 
-.post-card .meta { 
-  display: flex; 
-  align-items: center; 
-  gap: 8px; 
-  margin-bottom: 8px; 
+.post-card .meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
 }
 
-.post-card .meta .date { 
-  font-size: 12px; 
-  font-weight: 700; 
-  color: var(--ink-dim); 
+.post-card .meta .date {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-dim);
 }
 
-.post-card .text { 
-  font-size: 15px; 
-  line-height: 1.6; 
-  white-space: pre-wrap; 
-  word-break: break-word; 
+.post-card .text {
+  font-size: 15px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
-.post-card .actions { 
-  margin-top: 12px; 
+.post-card .actions {
+  margin-top: 12px;
 }
 
-.post-card .actions button { 
-  color: var(--ink-faint); 
-  font-size: 13px; 
-  font-weight: 700; 
+.post-card .actions button {
+  color: var(--ink-faint);
+  font-size: 13px;
+  font-weight: 700;
 }
 
-.post-card .actions button:hover { 
-  color: var(--ink); 
+.post-card .actions button:hover {
+  color: var(--ink);
 }
 
-mark { 
-  background: var(--green); 
-  color: var(--ink-dark); 
-  border-radius: 4px; 
-  padding: 0 4px; 
+mark {
+  background: var(--green);
+  color: var(--ink-dark);
+  border-radius: 4px;
+  padding: 0 4px;
 }
 
-.empty-state { 
-  text-align: center; 
-  padding: 48px 20px; 
-  color: var(--ink-dim); 
-  font-size: 14px; 
-  font-weight: 500; 
+.empty-state {
+  text-align: center;
+  padding: 48px 20px;
+  color: var(--ink-dim);
+  font-size: 14px;
+  font-weight: 500;
 }
 
 /* 사진 첨부 버튼 및 미리보기 */
@@ -311,4 +311,22 @@ mark {
   display: block;
   cursor: pointer;
   transition: opacity 0.2s;
+}
+
+.post-card.highlight-flash {
+  animation: flashHighlight 3s ease;
+}
+
+@keyframes flashHighlight {
+  0% {
+    box-shadow: 0 0 0 2px var(--green), 0 0 18px var(--green-hover);
+  }
+
+  50% {
+    box-shadow: 0 0 0 2px var(--green), 0 0 18px var(--green-hover);
+  }
+
+  100% {
+    box-shadow: var(--shadow-soft);
+  }
 }

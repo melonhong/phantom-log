@@ -106,14 +106,19 @@ window.PhantomCalendar = {
       const photoBadge = photoCount ? `<span class="tag post" style="background:var(--primary); color:#fff; margin-right:4px;">📷 사진${photoCount > 1 ? ` (${photoCount})` : ''}</span>` : '';
       const contentText = p.content ? escapeHtml(p.content).slice(0, 50) + (p.content.length > 50 ? '…' : '') : '';
       const el = document.createElement('div');
-      el.className = 'entry-mini';
+      el.className = 'entry-mini post-entry';
       el.innerHTML = `
         <div class="row">
           <div>${timeLabel ? `<span class="tag post">${timeLabel}</span>` : ''}${photoBadge}${contentText}</div>
           <button class="del">삭제</button>
         </div>`;
 
-      el.querySelector('.del').onclick = () => {
+      el.addEventListener('click', () => {
+        window.PhantomFeed.scrollToPost(p.id);
+      });
+
+      el.querySelector('.del').onclick = (e) => {
+        e.stopPropagation();
         state.data.posts = state.data.posts.filter(x => x.id !== p.id);
         window.PhantomCalendar.refreshUI(dateStr);
       };

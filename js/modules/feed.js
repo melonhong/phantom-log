@@ -142,7 +142,7 @@ window.PhantomFeed = {
         imgHtml = `<div class="post-img-grid">${imgs.map((src, i) => `<img src="${src}" alt="첨부 이미지 ${i + 1}">`).join('')}</div>`;
       }
       return `
-        <div class="post-card">
+        <div class="post-card" id="post-${p.id}" data-id="${p.id}">
           <div class="meta">
             <span class="date">${d.getFullYear()}년 ${d.getMonth() + 1}월 ${d.getDate()}일${timeLabel ? (' · ' + timeLabel) : ''}</span>
             <span class="cat-badge">${cat}</span>
@@ -155,6 +155,49 @@ window.PhantomFeed = {
 
     list.insertAdjacentHTML('beforeend', html);
     window.PhantomFeed.currentLoadedCount += nextBatch.length;
+  },
+
+  scrollToPost(postId) {
+    const feedTabBtn = document.querySelector('nav.tabs button[data-view="feed"]');
+    if (feedTabBtn) feedTabBtn.click();
+
+    const { state } = window.PhantomStorage;
+    const post = state.data.posts.find(p => p.id === postId);
+    if (!post) return;
+
+    const searchInput = document.getElementById('searchInput');
+    let needRender = false;
+    if (searchInput && searchInput.value.trim() !== '') {
+      searchInput.value = '';
+      needRender = true;
+    }
+    if (window.PhantomFeed.activeCategory && post.category !== window.PhantomFeed.activeCategory) {
+      window.PhantomFeed.activeCategory = null;
+      window.PhantomFeed.renderCatChips();
+      needRender = true;
+    }
+
+    if (needRender || !window.PhantomFeed.filteredPosts.some(p => p.id === postId)) {
+      window.PhantomFeed.renderFeed();
+    }
+
+    const targetIdx = window.PhantomFeed.filteredPosts.findIndex(p => p.id === postId);
+    if (targetIdx !== -1) {
+      while (targetIdx >= window.PhantomFeed.currentLoadedCount && window.PhantomFeed.currentLoadedCount < window.PhantomFeed.filteredPosts.length) {
+        window.PhantomFeed.loadMorePosts();
+      }
+    }
+
+    setTimeout(() => {
+      const cardEl = document.getElementById(`post-${postId}`);
+      if (cardEl) {
+        cardEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        cardEl.classList.remove('highlight-flash');
+        void cardEl.offsetWidth;
+        cardEl.classList.add('highlight-flash');
+        setTimeout(() => cardEl.classList.remove('highlight-flash'), 2000);
+      }
+    }, 100);
   },
 
   initFeed() {
