@@ -39,15 +39,21 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   const [isTodoModalOpen, setIsTodoModalOpen] = useState(false);
   const [todoModalDate, setTodoModalDate] = useState('');
 
-  // 명언 불러오기
+  // 명언 불러오기 (3초 타임아웃 적용으로 408 에러 방지)
   useEffect(() => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3000);
+
     const fetchQuote = async () => {
       try {
         if (window.location.protocol === 'file:') {
           throw new Error('Local file protocol');
         }
         const targetUrl = encodeURIComponent('https://zenquotes.io/api/today');
-        const res = await fetch(`https://api.allorigins.win/raw?url=${targetUrl}`);
+        const res = await fetch(`https://api.allorigins.win/raw?url=${targetUrl}`, {
+          signal: controller.signal
+        });
+        clearTimeout(timeoutId);
         if (!res.ok) throw new Error('API request failed');
         const parsed = await res.json();
         if (Array.isArray(parsed) && parsed.length > 0 && parsed[0].q) {
@@ -55,12 +61,17 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
           return;
         }
       } catch (e) {
-        // Fail fallback
+        // Fail fallback silently to dummy quote
       }
       const todayIdx = new Date().getDate() % dummyQuotes.length;
       setQuote(dummyQuotes[todayIdx]);
     };
     fetchQuote();
+
+    return () => {
+      clearTimeout(timeoutId);
+      controller.abort();
+    };
   }, []);
 
   const getTodayStr = () => {
