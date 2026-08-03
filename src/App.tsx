@@ -271,6 +271,7 @@ export const App: React.FC = () => {
             deleteTodo={deleteTodo}
             deletePostAndReplies={deletePostAndReplies}
             onGoToPost={handleGoToPost}
+            showToast={showToast}
           />
         )}
 
@@ -285,6 +286,7 @@ export const App: React.FC = () => {
             searchPostId={searchPostId}
             clearSearchPostId={() => setSearchPostId(null)}
             onImageClick={setLightboxSrc}
+            showToast={showToast}
           />
         )}
 

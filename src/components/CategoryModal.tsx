@@ -7,6 +7,7 @@ interface CategoryModalProps {
   onClose: () => void;
   onAdd: (name: string) => boolean;
   onDelete: (key: string) => void;
+  showToast: (msg: string) => void;
 }
 
 export const CategoryModal: React.FC<CategoryModalProps> = ({
@@ -14,7 +15,8 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
   categories,
   onClose,
   onAdd,
-  onDelete
+  onDelete,
+  showToast
 }) => {
   const [newCatName, setNewCatName] = useState('');
 
@@ -28,7 +30,7 @@ export const CategoryModal: React.FC<CategoryModalProps> = ({
     if (success) {
       setNewCatName('');
     } else {
-      alert('이미 있는 카테고리예요.');
+      showToast('이미 있는 카테고리예요.');
     }
   };
 

@@ -9,6 +9,7 @@ interface CalendarViewProps {
   deleteTodo: (todoId: string) => void;
   deletePostAndReplies: (postId: string) => void;
   onGoToPost: (postId: string) => void;
+  showToast: (msg: string) => void;
 }
 
 interface Quote {
@@ -28,7 +29,8 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
   toggleTodo,
   deleteTodo,
   deletePostAndReplies,
-  onGoToPost
+  onGoToPost,
+  showToast
 }) => {
   const [subTab, setSubTab] = useState<'grid' | 'today'>('grid');
   const [calCursor, setCalCursor] = useState<Date>(new Date());
@@ -310,6 +312,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
         onClose={() => setIsTodoModalOpen(false)}
         onSave={addTodo}
         defaultDate={todoModalDate}
+        showToast={showToast}
       />
     </section>
   );

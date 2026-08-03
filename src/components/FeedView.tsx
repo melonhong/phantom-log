@@ -12,6 +12,7 @@ interface FeedViewProps {
   searchPostId: string | null;
   clearSearchPostId: () => void;
   onImageClick: (src: string) => void;
+  showToast: (msg: string) => void;
 }
 
 const PAGE_SIZE = 50;
@@ -74,7 +75,8 @@ export const FeedView: React.FC<FeedViewProps> = ({
   deleteCategory,
   searchPostId,
   clearSearchPostId,
-  onImageClick
+  onImageClick,
+  showToast
 }) => {
   const [composeText, setComposeText] = useState('');
   const [composeDate, setComposeDate] = useState('');
@@ -189,7 +191,7 @@ export const FeedView: React.FC<FeedViewProps> = ({
 
     const remainSpace = 5 - currentBase64Images.length;
     if (remainSpace <= 0) {
-      alert('이미지는 최대 5장까지 첨부할 수 있습니다.');
+      showToast('이미지는 최대 5장까지 첨부할 수 있습니다.');
       e.target.value = '';
       return;
     }
@@ -204,10 +206,10 @@ export const FeedView: React.FC<FeedViewProps> = ({
       if (validCompressed.length) {
         setCurrentBase64Images(prev => [...prev, ...validCompressed]);
       } else {
-        alert('이미지를 처리하지 못했어요.');
+        showToast('이미지를 처리하지 못했어요.');
       }
     } catch (err) {
-      alert('이미지 압축 중 오류가 발생했습니다.');
+      showToast('이미지 압축 중 오류가 발생했습니다.');
     } finally {
       setIsCompressing(false);
       e.target.value = '';
@@ -233,20 +235,20 @@ export const FeedView: React.FC<FeedViewProps> = ({
     setComposeText('');
     setCurrentBase64Images([]);
     if (fileInputRef.current) fileInputRef.current.value = '';
-    alert('게시했어요.');
+    showToast('게시했어요.');
   };
 
   // 답글 게시 핸들러
   const handleReplySubmit = (parentId: string) => {
     const content = (replyInputs[parentId] || '').trim();
     if (!content) {
-      alert('답글 내용을 입력해주세요.');
+      showToast('답글 내용을 입력해주세요.');
       return;
     }
     addReply(parentId, content);
     setReplyInputs(prev => ({ ...prev, [parentId]: '' }));
     setReplyToggles(prev => ({ ...prev, [parentId]: false }));
-    alert('답글을 게시했어요.');
+    showToast('답글을 게시했어요.');
   };
 
   // 답글 입력 취소
@@ -573,6 +575,7 @@ export const FeedView: React.FC<FeedViewProps> = ({
         onClose={() => setIsCategoryModalOpen(false)}
         onAdd={addCategory}
         onDelete={deleteCategory}
+        showToast={showToast}
       />
     </section>
   );

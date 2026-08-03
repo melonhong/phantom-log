@@ -5,13 +5,15 @@ interface TodoModalProps {
   onClose: () => void;
   onSave: (content: string, date: string, time: string) => void;
   defaultDate: string;
+  showToast: (msg: string) => void;
 }
 
 export const TodoModal: React.FC<TodoModalProps> = ({
   isOpen,
   onClose,
   onSave,
-  defaultDate
+  defaultDate,
+  showToast
 }) => {
   const [content, setContent] = useState('');
   const [date, setDate] = useState('');
@@ -30,7 +32,7 @@ export const TodoModal: React.FC<TodoModalProps> = ({
 
   const handleSave = () => {
     if (!content.trim() || !date) {
-      alert('내용과 날짜를 입력해주세요.');
+      showToast('내용과 날짜를 입력해주세요.');
       return;
     }
     onSave(content.trim(), date, time);
