@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import JSZip from 'jszip';
 import { usePhantomData } from './hooks/usePhantomData';
-import { CalendarView } from './components/CalendarView';
-import { FeedView } from './components/FeedView';
-import { GoalsView } from './components/GoalsView';
+import { CalendarView } from './components/calendar/CalendarView';
+import { FeedView } from './components/feed/FeedView';
+import { GoalsView } from './components/goals/GoalsView';
 import { ImageLightbox } from './components/ImageLightbox';
 
 export const App: React.FC = () => {

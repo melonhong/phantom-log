@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { AppState } from '../types';
+import { AppState } from '../../types';
 
 interface GoalsViewProps {
   data: AppState;
@@ -14,7 +14,7 @@ export const GoalsView: React.FC<GoalsViewProps> = ({
   addGoal,
   toggleGoal,
   deleteGoal,
-  saveRetro
+  saveRetro,
 }) => {
   const [goalsCursor, setGoalsCursor] = useState<Date>(new Date());
   const [newGoalInput, setNewGoalInput] = useState('');
@@ -56,7 +56,6 @@ export const GoalsView: React.FC<GoalsViewProps> = ({
   const handleAddGoal = () => {
     const text = newGoalInput.trim();
     if (!text) return;
-
     addGoal(monthKey, text);
     setNewGoalInput('');
   };
@@ -89,9 +88,15 @@ export const GoalsView: React.FC<GoalsViewProps> = ({
     <section className="view active" id="view-goals">
       {/* 월 선택부 */}
       <div className="month-select">
-        <button className="nav-btn" onClick={() => changeMonth(-1)}>‹</button>
-        <h2 id="goalsTitle">{y}년 {m + 1}월</h2>
-        <button className="nav-btn" onClick={() => changeMonth(1)}>›</button>
+        <button className="nav-btn" onClick={() => changeMonth(-1)}>
+          ‹
+        </button>
+        <h2 id="goalsTitle">
+          {y}년 {m + 1}월
+        </h2>
+        <button className="nav-btn" onClick={() => changeMonth(1)}>
+          ›
+        </button>
       </div>
 
       {/* 이번 달 목표 카드 */}
@@ -111,7 +116,9 @@ export const GoalsView: React.FC<GoalsViewProps> = ({
                   onChange={(e) => toggleGoal(monthKey, g.id, e.target.checked)}
                 />
                 <span>{g.text}</span>
-                <button className="del" onClick={() => deleteGoal(monthKey, g.id)}>✕</button>
+                <button className="del" onClick={() => deleteGoal(monthKey, g.id)}>
+                  ✕
+                </button>
               </div>
             ))
           )}
@@ -137,7 +144,9 @@ export const GoalsView: React.FC<GoalsViewProps> = ({
           value={retroText}
           onChange={handleRetroChange}
         />
-        <div className="save-hint" id="retroSaved">{hintText}</div>
+        <div className="save-hint" id="retroSaved">
+          {hintText}
+        </div>
       </div>
     </section>
   );
