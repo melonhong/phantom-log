@@ -79,7 +79,7 @@ export const FeedView: React.FC<FeedViewProps> = ({
   showToast
 }) => {
   const [composeText, setComposeText] = useState('');
-  const [composeDate, setComposeDate] = useState('');
+  const [composeDate, setComposeDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [composeCategory, setComposeCategory] = useState('');
   const [currentBase64Images, setCurrentBase64Images] = useState<string[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
@@ -98,10 +98,9 @@ export const FeedView: React.FC<FeedViewProps> = ({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 초기 날짜 및 카테고리 값 바인딩
+  // 초기 카테고리 값 바인딩 (날짜는 useState 초기값으로 오늘 날짜 고정)
   useEffect(() => {
-    setComposeDate(new Date().toISOString().split('T')[0]);
-    if (data.categories.length > 0) {
+    if (data.categories.length > 0 && !composeCategory) {
       setComposeCategory(data.categories[0].key);
     }
   }, [data.categories]);
