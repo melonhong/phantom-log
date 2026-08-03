@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import JSZip from 'jszip';
+import { getBackupSaveToast, saveBackupFile } from './utils/backupExport';
 import { usePhantomData } from './hooks/usePhantomData';
 import { CalendarView } from './components/calendar/CalendarView';
 import { FeedView } from './components/feed/FeedView';
@@ -125,31 +126,9 @@ export const App: React.FC = () => {
         return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
       };
       const defaultFileName = `기록장-백업-${getTodayStr()}.zip`;
-
-      if ('showSaveFilePicker' in window) {
-        try {
-          const handle = await (window as any).showSaveFilePicker({
-            suggestedName: defaultFileName,
-            types: [{ description: 'ZIP Archive', accept: { 'application/zip': ['.zip'] } }]
-          });
-          const writable = await handle.createWritable();
-          await writable.write(zipBlob);
-          await writable.close();
-          showToast('ZIP 백업 파일로 저장했어요.');
-        } catch (err: any) {
-          if (err.name !== 'AbortError') {
-            showToast('파일 저장 중 오류가 발생했습니다.');
-          }
-        }
-      } else {
-        const url = URL.createObjectURL(zipBlob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = defaultFileName;
-        a.click();
-        URL.revokeObjectURL(url);
-        showToast('ZIP 백업 파일로 저장했어요.');
-      }
+      const result = await saveBackupFile(zipBlob, defaultFileName);
+      const msg = getBackupSaveToast(result);
+      if (msg) showToast(msg);
     } catch (e) {
       console.error(e);
       showToast('백업 생성 중 오류가 발생했습니다.');
@@ -167,13 +146,28 @@ export const App: React.FC = () => {
 
     try {
       let jsonText = '';
-      if (file.name.endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed') {
-        const zip = await JSZip.loadAsync(file);
-        const jsonFile = zip.file('backup.json') || Object.values(zip.files).find(f => !f.dir && f.name.endsWith('.json'));
-        if (!jsonFile) {
-          throw new Error('ZIP 내에서 백업 JSON 파일을 찾을 수 없습니다.');
+      const lowerName = file.name.toLowerCase();
+      if (lowerName.endsWith('.zip') || file.type === 'application/zip' || file.type === 'application/x-zip-compressed') {
+        try {
+          // File 객체를 ArrayBuffer로 먼저 읽어야 일부 환경에서 안정적으로 동작함
+          const arrayBuffer = await file.arrayBuffer();
+          const zip = await JSZip.loadAsync(arrayBuffer);
+          const allFiles = Object.values(zip.files);
+          const jsonFile = zip.file('backup.json') || allFiles.find(f => !f.dir && f.name.endsWith('.json'));
+          if (!jsonFile) {
+            throw new Error('ZIP 내 JSON 파일 없음');
+          }
+          jsonText = await jsonFile.async('text');
+        } catch (zipErr) {
+          // ZIP 파싱 실패 시 JSON으로 폴백 시도
+          console.warn('[ZIP 파싱 실패, JSON 폴백 시도]', zipErr);
+          try {
+            jsonText = await file.text();
+            JSON.parse(jsonText); // 유효한 JSON인지 검증
+          } catch {
+            throw new Error('파일이 손상됐거나 빈 파일입니다. (ZIP 파싱 실패, JSON도 아님)');
+          }
         }
-        jsonText = await jsonFile.async('text');
       } else {
         jsonText = await file.text();
       }
@@ -181,9 +175,9 @@ export const App: React.FC = () => {
       const parsed = JSON.parse(jsonText);
       await importData(parsed);
       showToast('데이터를 성공적으로 불러왔어요.');
-    } catch (err) {
-      console.error(err);
-      showToast('파일을 읽을 수 없어요. 유효한 백업 파일인지 확인해주세요.');
+    } catch (err: any) {
+      console.error('[불러오기 실패]', err);
+      showToast(err?.message || '파일을 읽을 수 없어요. 유효한 백업 파일인지 확인해주세요.');
     }
     e.target.value = '';
   };
