@@ -29,7 +29,7 @@ export const App: React.FC = () => {
 
   const [activeTab, setActiveTab] = useState<'cal' | 'feed' | 'goals'>('cal');
   const [searchPostId, setSearchPostId] = useState<string | null>(null);
-  const [lightboxSrc, setLightboxSrc] = useState<string | null>(null);
+  const [lightbox, setLightbox] = useState<{ images: string[]; index: number } | null>(null);
 
   // 토스트 상태
   const [toastMsg, setToastMsg] = useState<string | null>(null);
@@ -285,7 +285,7 @@ export const App: React.FC = () => {
             deleteCategory={deleteCategory}
             searchPostId={searchPostId}
             clearSearchPostId={() => setSearchPostId(null)}
-            onImageClick={setLightboxSrc}
+            onImageClick={(images, index) => setLightbox({ images, index })}
             showToast={showToast}
           />
         )}
@@ -328,7 +328,11 @@ export const App: React.FC = () => {
       </div>
 
       {/* 이미지 라이트박스 */}
-      <ImageLightbox src={lightboxSrc} onClose={() => setLightboxSrc(null)} />
+      <ImageLightbox
+        images={lightbox?.images ?? []}
+        initialIndex={lightbox?.index ?? null}
+        onClose={() => setLightbox(null)}
+      />
 
       {/* 토스트 알림 */}
       <div id="toast" className={toastMsg ? 'show' : ''}>

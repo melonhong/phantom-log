@@ -14,7 +14,7 @@ interface FeedViewProps {
   deleteCategory: (key: string) => void;
   searchPostId: string | null;
   clearSearchPostId: () => void;
-  onImageClick: (src: string) => void;
+  onImageClick: (images: string[], index: number) => void;
   showToast: (msg: string) => void;
 }
 

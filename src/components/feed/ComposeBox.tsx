@@ -5,7 +5,7 @@ import { compressImage } from '../../utils/imageUtils';
 interface ComposeBoxProps {
   categories: Category[];
   onPost: (content: string, date: string, category: string, images: string[]) => void;
-  onImageClick: (src: string) => void;
+  onImageClick: (images: string[], index: number) => void;
   showToast: (msg: string) => void;
 }
 
@@ -95,7 +95,7 @@ export const ComposeBox: React.FC<ComposeBoxProps> = ({
           <div className="image-preview-list">
             {currentBase64Images.map((src, idx) => (
               <div className="image-preview-item" key={`preview-${idx}`}>
-                <img src={src} alt={`미리보기 ${idx + 1}`} onClick={() => onImageClick(src)} />
+                <img src={src} alt={`미리보기 ${idx + 1}`} onClick={() => onImageClick(currentBase64Images, idx)} />
                 <button
                   type="button"
                   className="remove-img-btn"

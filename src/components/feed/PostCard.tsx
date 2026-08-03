@@ -9,7 +9,7 @@ interface PostCardProps {
   searchQuery: string;
   onReplySubmit: (parentId: string, content: string) => void;
   onDelete: (postId: string) => void;
-  onImageClick: (src: string) => void;
+  onImageClick: (images: string[], index: number) => void;
   showToast: (msg: string) => void;
 }
 
@@ -76,7 +76,7 @@ export const PostCard: React.FC<PostCardProps> = ({
 
       {imgs.length === 1 && (
         <div className="post-img-wrap">
-          <img src={imgs[0]} alt="첨부 이미지" onClick={() => onImageClick(imgs[0])} />
+          <img src={imgs[0]} alt="첨부 이미지" onClick={() => onImageClick(imgs, 0)} />
         </div>
       )}
       {imgs.length > 1 && (
@@ -86,7 +86,7 @@ export const PostCard: React.FC<PostCardProps> = ({
               src={src}
               alt={`첨부 이미지 ${i + 1}`}
               key={`img-${p.id}-${i}`}
-              onClick={() => onImageClick(src)}
+              onClick={() => onImageClick(imgs, i)}
             />
           ))}
         </div>
