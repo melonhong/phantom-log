@@ -213,7 +213,7 @@ export const App: React.FC = () => {
   });
 
   return (
-    <div id="app">
+    <>
       {/* 헤더 */}
       <header className="top">
         <a href="#" className="header-logo" title="팬텀 노트" onClick={(e) => e.preventDefault()}>
@@ -334,6 +334,6 @@ export const App: React.FC = () => {
       <div id="toast" className={toastMsg ? 'show' : ''}>
         {toastMsg}
       </div>
-    </div>
+    </>
   );
 };
