@@ -33,7 +33,7 @@ export const App: React.FC = () => {
 
   // 토스트 상태
   const [toastMsg, setToastMsg] = useState<string | null>(null);
-  const toastTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const toastTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // 테마 상태
   const [theme, setTheme] = useState<'light' | 'dark'>('light');

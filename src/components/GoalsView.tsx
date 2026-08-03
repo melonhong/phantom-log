@@ -20,7 +20,7 @@ export const GoalsView: React.FC<GoalsViewProps> = ({
   const [newGoalInput, setNewGoalInput] = useState('');
   const [retroText, setRetroText] = useState('');
   const [hintText, setHintText] = useState('자동 저장됨');
-  const debounceTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const getMonthKey = (d: Date) => {
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
