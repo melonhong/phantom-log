@@ -79,7 +79,10 @@ export const FeedView: React.FC<FeedViewProps> = ({
   showToast
 }) => {
   const [composeText, setComposeText] = useState('');
-  const [composeDate, setComposeDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [composeDate, setComposeDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
   const [composeCategory, setComposeCategory] = useState('');
   const [currentBase64Images, setCurrentBase64Images] = useState<string[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
