@@ -7,6 +7,9 @@ export interface Post {
   images: string[];
   image: string | null;
   createdAt: string; // ISOString
+  updatedAt: string; // ISOString
+  isDeleted: boolean; // Soft Delete 플래그
+  bookmarked: boolean; // 북마크 표시
 }
 
 export interface Todo {
@@ -16,6 +19,7 @@ export interface Todo {
   time: string; // HH:MM
   done: boolean;
   reminded: boolean;
+  updatedAt: string; // ISOString
 }
 
 export interface Category {
@@ -27,6 +31,7 @@ export interface Goal {
   id: string;
   text: string;
   done: boolean;
+  updatedAt: string; // ISOString
 }
 
 export interface MonthlyData {

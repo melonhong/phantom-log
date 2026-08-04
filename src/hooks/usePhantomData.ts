@@ -12,6 +12,15 @@ declare global {
   }
 }
 
+// UUID 생성 헬퍼
+const generateId = (): string => {
+  if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+    return crypto.randomUUID();
+  }
+  // fallback: 구형 환경
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+};
+
 const STORE_KEY = 'diary-app-data';
 const CATS_DEFAULT: Category[] = [{ key: '일상', color: '#5865f2' }];
 
@@ -76,9 +85,29 @@ export const usePhantomData = () => {
         if (res && res.value) {
           const parsed = JSON.parse(res.value);
           setData({
-            posts: (parsed.posts || []).map((p: any) => ({ parentId: null, ...p })),
-            todos: parsed.todos || [],
-            monthly: parsed.monthly || {},
+            posts: (parsed.posts || []).map((p: any) => ({
+              parentId: null,
+              isDeleted: false,
+              bookmarked: false,
+              updatedAt: p.createdAt || new Date().toISOString(),
+              ...p,
+            })),
+            todos: (parsed.todos || []).map((t: any) => ({
+              updatedAt: t.updatedAt || t.createdAt || new Date().toISOString(),
+              ...t,
+            })),
+            monthly: Object.fromEntries(
+              Object.entries(parsed.monthly || {}).map(([k, v]: [string, any]) => [
+                k,
+                {
+                  ...v,
+                  goals: (v.goals || []).map((g: any) => ({
+                    updatedAt: g.updatedAt || new Date().toISOString(),
+                    ...g,
+                  })),
+                },
+              ])
+            ),
             categories: (parsed.categories && parsed.categories.length)
               ? parsed.categories
               : JSON.parse(JSON.stringify(CATS_DEFAULT))
@@ -134,15 +163,19 @@ export const usePhantomData = () => {
 
   // 2. 일지 게시
   const addPost = useCallback((content: string, date: string, category: string, images: string[]) => {
+    const now = new Date().toISOString();
     const newPost: Post = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      id: generateId(),
       parentId: null,
       content,
       date,
       category: category || defaultCatKey(data),
       images: [...images],
       image: images[0] || null,
-      createdAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now,
+      isDeleted: false,
+      bookmarked: false,
     };
 
     const nextState = {
@@ -155,15 +188,19 @@ export const usePhantomData = () => {
   // 3. 답글 추가
   const addReply = useCallback((parentId: string, content: string) => {
     const parentPost = data.posts.find(x => x.id === parentId);
+    const now = new Date().toISOString();
     const newPost: Post = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      id: generateId(),
       parentId,
       content,
       date: parentPost ? parentPost.date : new Date().toISOString().split('T')[0],
       category: parentPost ? parentPost.category : defaultCatKey(data),
       images: [],
       image: null,
-      createdAt: new Date().toISOString()
+      createdAt: now,
+      updatedAt: now,
+      isDeleted: false,
+      bookmarked: false,
     };
 
     const nextState = {
@@ -173,7 +210,7 @@ export const usePhantomData = () => {
     saveData(nextState);
   }, [data, saveData, defaultCatKey]);
 
-  // 4. 일지 및 하위 답글 삭제
+  // 4. 일지 및 하위 답글 삭제 (Soft Delete)
   const deletePostAndReplies = useCallback((postId: string) => {
     const idsToDelete = new Set<string>([postId]);
     let added = true;
@@ -187,22 +224,29 @@ export const usePhantomData = () => {
       });
     }
 
+    const now = new Date().toISOString();
     const nextState = {
       ...data,
-      posts: data.posts.filter(p => !idsToDelete.has(p.id))
+      posts: data.posts.map(p =>
+        idsToDelete.has(p.id)
+          ? { ...p, isDeleted: true, updatedAt: now }
+          : p
+      )
     };
     saveData(nextState);
   }, [data, saveData]);
 
   // 5. 할 일 추가
   const addTodo = useCallback((content: string, date: string, time: string) => {
+    const now = new Date().toISOString();
     const newTodo: Todo = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      id: generateId(),
       content,
       date,
       time,
       done: false,
-      reminded: false
+      reminded: false,
+      updatedAt: now,
     };
 
     const nextState = {
@@ -216,7 +260,9 @@ export const usePhantomData = () => {
   const toggleTodo = useCallback((todoId: string, done: boolean) => {
     const nextState = {
       ...data,
-      todos: data.todos.map(t => t.id === todoId ? { ...t, done } : t)
+      todos: data.todos.map(t =>
+        t.id === todoId ? { ...t, done, updatedAt: new Date().toISOString() } : t
+      )
     };
     saveData(nextState);
   }, [data, saveData]);
@@ -234,7 +280,9 @@ export const usePhantomData = () => {
   const markTodoReminded = useCallback((todoId: string) => {
     const nextState = {
       ...data,
-      todos: data.todos.map(t => t.id === todoId ? { ...t, reminded: true } : t)
+      todos: data.todos.map(t =>
+        t.id === todoId ? { ...t, reminded: true, updatedAt: new Date().toISOString() } : t
+      )
     };
     saveData(nextState);
   }, [data, saveData]);
@@ -274,10 +322,12 @@ export const usePhantomData = () => {
 
   // 11. 목표 추가
   const addGoal = useCallback((monthKey: string, text: string) => {
+    const now = new Date().toISOString();
     const newGoal: Goal = {
-      id: Date.now().toString(36) + Math.random().toString(36).slice(2, 7),
+      id: generateId(),
       text,
-      done: false
+      done: false,
+      updatedAt: now,
     };
 
     const monthData = data.monthly[monthKey] || { goals: [], retro: '' };
@@ -301,7 +351,9 @@ export const usePhantomData = () => {
     const monthData = data.monthly[monthKey];
     if (!monthData) return;
 
-    const updatedGoals = monthData.goals.map(g => g.id === goalId ? { ...g, done } : g);
+    const updatedGoals = monthData.goals.map(g =>
+      g.id === goalId ? { ...g, done, updatedAt: new Date().toISOString() } : g
+    );
     const updatedMonthData = { ...monthData, goals: updatedGoals };
 
     const nextState = {
@@ -332,6 +384,32 @@ export const usePhantomData = () => {
     saveData(nextState);
   }, [data, saveData]);
 
+  // 15. 북마크 토글
+  const toggleBookmark = useCallback((postId: string) => {
+    const nextState = {
+      ...data,
+      posts: data.posts.map(p =>
+        p.id === postId
+          ? { ...p, bookmarked: !p.bookmarked, updatedAt: new Date().toISOString() }
+          : p
+      )
+    };
+    saveData(nextState);
+  }, [data, saveData]);
+
+  // 16. 일지 수정 (내용 + 카테고리 업데이트)
+  const updatePost = useCallback((postId: string, content: string, category: string) => {
+    const nextState = {
+      ...data,
+      posts: data.posts.map(p =>
+        p.id === postId
+          ? { ...p, content, category, updatedAt: new Date().toISOString() }
+          : p
+      )
+    };
+    saveData(nextState);
+  }, [data, saveData]);
+
   // 14. 회고 내용 저장
   const saveRetro = useCallback((monthKey: string, retroText: string) => {
     const monthData = data.monthly[monthKey] || { goals: [], retro: '' };
@@ -348,13 +426,19 @@ export const usePhantomData = () => {
   }, [data, saveData]);
 
   return {
-    data,
+    data: {
+      ...data,
+      posts: data.posts.filter(p => !p.isDeleted) // Soft Delete: UI에는 isDeleted=false인 것만 노출
+    },
+    rawData: data, // Soft Delete 포함 전체 데이터 (복구 등에 사용)
     loading,
     storageMode,
     importData,
     addPost,
     addReply,
     deletePostAndReplies,
+    updatePost,
+    toggleBookmark,
     addTodo,
     toggleTodo,
     deleteTodo,
