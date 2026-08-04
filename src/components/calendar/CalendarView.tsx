@@ -106,7 +106,7 @@ export const CalendarView: React.FC<CalendarViewProps> = ({
       {/* 명언 배너 */}
       <div className="quote-banner" id="quoteBanner">
         <div className="quote-content">
-          <span className="quote-mark">"</span>
+          <span className="quote-mark">“</span>
           <div className="quote-text-group">
             <p className="quote-text" id="quoteText">
               {quote.quote || '성공은 매일 반복한 작은 노력들의 합이다.'}
