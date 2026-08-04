@@ -1,30 +1,37 @@
 import React, { useState } from 'react';
-import { Post } from '../../types';
+import { Category, Post } from '../../types';
 import { highlightText } from '../../utils/textUtils';
 
 interface PostCardProps {
   post: Post;
+  categories: Category[];
   isReply?: boolean;
   depth?: number;
   searchQuery: string;
   onReplySubmit: (parentId: string, content: string) => void;
   onDelete: (postId: string) => void;
+  onEdit: (postId: string, content: string, category: string) => void;
   onImageClick: (images: string[], index: number) => void;
   showToast: (msg: string) => void;
 }
 
 export const PostCard: React.FC<PostCardProps> = ({
   post: p,
+  categories,
   isReply = false,
   depth = 0,
   searchQuery,
   onReplySubmit,
   onDelete,
+  onEdit,
   onImageClick,
   showToast,
 }) => {
   const [isReplyOpen, setIsReplyOpen] = useState(false);
   const [replyText, setReplyText] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
+  const [editText, setEditText] = useState('');
+  const [editCategory, setEditCategory] = useState('');
 
   const d = new Date(p.date + 'T00:00:00');
   const cat = p.category || '일상';
@@ -54,6 +61,29 @@ export const PostCard: React.FC<PostCardProps> = ({
     setIsReplyOpen(false);
   };
 
+  const handleEditOpen = () => {
+    setEditText(p.content);
+    setEditCategory(p.category || (categories[0]?.key ?? '일상'));
+    setIsEditing(true);
+    setIsReplyOpen(false);
+  };
+
+  const handleEditSave = () => {
+    const content = editText.trim();
+    if (!content) {
+      showToast('내용을 입력해주세요.');
+      return;
+    }
+    onEdit(p.id, content, editCategory);
+    setIsEditing(false);
+    showToast('수정됐어요.');
+  };
+
+  const handleEditCancel = () => {
+    setEditText('');
+    setIsEditing(false);
+  };
+
   return (
     <div
       className={`post-card${isReply ? ' reply-card' + visualDepthClass : ''}`}
@@ -67,11 +97,44 @@ export const PostCard: React.FC<PostCardProps> = ({
         <span className="cat-badge">{cat}</span>
       </div>
 
-      {p.content && (
-        <div
-          className="text"
-          dangerouslySetInnerHTML={{ __html: highlightText(p.content, searchQuery) }}
-        />
+      {isEditing ? (
+        <div className="compose" style={{ marginBottom: 0, marginTop: 8 }}>
+          <textarea
+            value={editText}
+            onChange={(e) => setEditText(e.target.value)}
+            autoFocus
+          />
+          <div className="foot">
+            <div className="foot-row">
+              <select
+                value={editCategory}
+                onChange={(e) => setEditCategory(e.target.value)}
+              >
+                {categories.map((c) => (
+                  <option value={c.key} key={`edit-opt-${c.key}`}>
+                    {c.key}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="foot-row">
+              <span className="char">{editText.length}</span>
+              <button type="button" className="reply-cancel-btn" onClick={handleEditCancel}>
+                취소
+              </button>
+              <button type="button" className="post-btn" onClick={handleEditSave}>
+                저장
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        p.content && (
+          <div
+            className="text"
+            dangerouslySetInnerHTML={{ __html: highlightText(p.content, searchQuery) }}
+          />
+        )
       )}
 
       {imgs.length === 1 && (
@@ -96,9 +159,16 @@ export const PostCard: React.FC<PostCardProps> = ({
         <button
           type="button"
           className="reply-btn"
-          onClick={() => setIsReplyOpen((prev) => !prev)}
+          onClick={() => { setIsReplyOpen((prev) => !prev); setIsEditing(false); }}
         >
           답글
+        </button>
+        <button
+          type="button"
+          className="edit-btn"
+          onClick={handleEditOpen}
+        >
+          수정
         </button>
         <button
           type="button"

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import JSZip from 'jszip';
-import { getBackupSaveToast, saveBackupFile } from './utils/backupExport';
+import { getBackupSaveToast, saveBackupFile, mergeAppState } from './utils/backupExport';
 import { usePhantomData } from './hooks/usePhantomData';
 import { CalendarView } from './components/calendar/CalendarView';
 import { FeedView } from './components/feed/FeedView';
@@ -16,6 +16,7 @@ export const App: React.FC = () => {
     addPost,
     addReply,
     deletePostAndReplies,
+    updatePost,
     addTodo,
     toggleTodo,
     deleteTodo,
@@ -173,7 +174,8 @@ export const App: React.FC = () => {
       }
 
       const parsed = JSON.parse(jsonText);
-      await importData(parsed);
+      const merged = mergeAppState(data, parsed);
+      await importData(merged);
       showToast('데이터를 성공적으로 불러왔어요.');
     } catch (err: any) {
       console.error('[불러오기 실패]', err);
@@ -275,6 +277,7 @@ export const App: React.FC = () => {
             addPost={addPost}
             addReply={addReply}
             deletePostAndReplies={deletePostAndReplies}
+            updatePost={updatePost}
             addCategory={addCategory}
             deleteCategory={deleteCategory}
             searchPostId={searchPostId}

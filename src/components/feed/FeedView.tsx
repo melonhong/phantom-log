@@ -10,6 +10,7 @@ interface FeedViewProps {
   addPost: (content: string, date: string, category: string, images: string[]) => void;
   addReply: (parentId: string, content: string) => void;
   deletePostAndReplies: (postId: string) => void;
+  updatePost: (postId: string, content: string, category: string) => void;
   addCategory: (name: string) => boolean;
   deleteCategory: (key: string) => void;
   searchPostId: string | null;
@@ -25,6 +26,7 @@ export const FeedView: React.FC<FeedViewProps> = ({
   addPost,
   addReply,
   deletePostAndReplies,
+  updatePost,
   addCategory,
   deleteCategory,
   searchPostId,
@@ -206,9 +208,11 @@ export const FeedView: React.FC<FeedViewProps> = ({
               <PostCard
                 key={`card-${rootPost.id}`}
                 post={rootPost}
+                categories={data.categories}
                 searchQuery={searchQuery}
                 onReplySubmit={addReply}
                 onDelete={deletePostAndReplies}
+                onEdit={updatePost}
                 onImageClick={onImageClick}
                 showToast={showToast}
               />
@@ -226,11 +230,13 @@ export const FeedView: React.FC<FeedViewProps> = ({
                     <PostCard
                       key={`card-${item.post.id}`}
                       post={item.post}
+                      categories={data.categories}
                       isReply
                       depth={item.depth}
                       searchQuery={searchQuery}
                       onReplySubmit={addReply}
                       onDelete={deletePostAndReplies}
+                      onEdit={updatePost}
                       onImageClick={onImageClick}
                       showToast={showToast}
                     />
